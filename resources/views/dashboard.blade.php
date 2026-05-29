@@ -1,89 +1,147 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trashify Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3D5524',
+                        gradStart: '#709867',
+                        gradEnd: '#9BB863'
+                    },
+                    fontFamily: {
+                        jakarta: ['Plus Jakarta Sans']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="bg-[#e9f0e4]/50 flex font-jakarta">
 
-<div class="flex">
-
-    <!-- SIDEBAR -->
-    <div class="w-64 h-screen bg-green-900 text-white p-5">
-        <h1 class="text-2xl font-bold mb-8">Trashify</h1>
-
-        <ul class="space-y-4">
-            <li><a href="/dashboard" class="block p-2 rounded hover:bg-green-700">Dashboard</a></li>
-            <a href="/history" class="block p-2 rounded hover:bg-green-700">History</a>
-            <li><a href="#" class="block p-2 rounded hover:bg-green-700">Wallet</a></li>
-            <li><a href="#" class="block p-2 rounded hover:bg-green-700">Profil</a></li>
-        </ul>
-    </div>
-
-    <!-- MAIN CONTENT -->
-    <div class="flex-1 p-6">
-
-        <h1 class="text-3xl font-bold mb-6">Impact Dashboard</h1>
+    <aside class="w-[280px] bg-primary text-white h-screen fixed p-10 flex flex-col justify-between shadow-xl">
         
-        <!-- CARD -->
-        <div class="bg-green-700 text-white p-6 rounded-xl mb-6">
-            <h2 class="text-xl font-semibold">Circular Milestone</h2>
-            <p class="text-sm mt-2">Kamu sudah berkontribusi dalam pengelolaan sampah 🎉</p>
+        <div>
+            <div class="flex items-center gap-3 mb-10">
+                <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center font-bold text-lg text-white border border-white/30">
+                    {{ strtoupper(substr(Auth::user()->username, 0, 1)) }}
+                </div>
+                <div>
+                    <p class="font-bold">{{ Auth::user()->username }}</p>
+                    <small class="text-gray-300">Eco User</small>
+                </div>
+            </div>
+
+            <nav class="flex flex-col gap-2">
+                <a href="{{ route('dashboard') }}" class="bg-white/20 px-5 py-3 rounded-xl flex items-center gap-3 font-semibold transition">
+                    <i class="fas fa-th-large"></i> Dashboard
+                </a>
+
+                <a href="{{ route('history.index') }}" class="px-5 py-3 rounded-xl flex items-center gap-3 text-green-100 hover:bg-white/10 transition">
+                    <i class="fas fa-history"></i> Riwayat
+                </a>
+
+                <a href="#" class="px-5 py-3 rounded-xl flex items-center gap-3 text-green-100 hover:bg-white/10 transition">
+                    <i class="fas fa-wallet"></i> Wallet
+                </a>
+
+                <a href="{{ route('profil.show') }}" class="px-5 py-3 rounded-xl flex items-center gap-3 text-green-100 hover:bg-white/10 transition">
+                    <i class="fas fa-user"></i> Profil
+                </a>
+            </nav>
+        </div>
+
+        <div>
+            <form action="{{ route('logout') }}" method="POST">
+                @csrf
+                <button type="submit" class="w-full text-left px-5 py-3 rounded-xl text-red-200 hover:bg-red-900/30 hover:text-white transition font-semibold">
+                    <i class="fas fa-sign-out-alt mr-2"></i> Keluar
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <div class="flex-1 ml-[280px] p-10 h-screen overflow-y-auto">
+
+        <h1 class="text-3xl font-extrabold text-primary mb-6">Impact Dashboard</h1>
+        
+        <div class="bg-gradient-to-r from-gradStart to-gradEnd text-white p-6 rounded-2xl shadow-lg mb-6">
+            <h2 class="text-xl font-bold">Circular Milestone</h2>
+            <p class="text-white/90 text-sm mt-1">Kamu sudah berkontribusi dalam pengelolaan sampah 🎉</p>
 
             <div class="flex gap-4 mt-4">
-                <div class="bg-green-800 p-3 rounded">
-                    <p class="text-sm">Total Sampah</p>
-                    <h3 class="text-lg font-bold">12.4 Kg</h3>
+                <div class="bg-primary/20 backdrop-blur-sm p-4 rounded-xl min-w-[120px]">
+                    <p class="text-xs text-white/80">Total Sampah</p>
+                    <h3 class="text-xl font-bold mt-1">12.4 Kg</h3>
                 </div>
-                <div class="bg-green-800 p-3 rounded">
-                    <p class="text-sm">Efisiensi</p>
-                    <h3 class="text-lg font-bold">+14%</h3>
+                <div class="bg-primary/20 backdrop-blur-sm p-4 rounded-xl min-w-[120px]">
+                    <p class="text-xs text-white/80">Efisiensi</p>
+                    <h3 class="text-xl font-bold mt-1">+14%</h3>
                 </div>
             </div>
         </div>
 
-        <a href="/setor-sampah"
-            class="inline-block bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-800">
-            + Setor Sampah
-        </a>
-
-        <!-- MARKET VALUE -->
-        <div class="bg-white p-6 rounded-xl shadow mb-6">
-            <h2 class="text-gray-600">Total Saldo</h2>
-            <h1 class="text-2xl font-bold text-green-700">Rp 250.000</h1>
+        <div class="mb-6">
+            <a href="{{ route('setor.create') }}"
+                class="inline-block bg-primary text-white px-6 py-3 rounded-xl font-bold shadow hover:bg-[#2d3f1a] transition">
+                + Setor Sampah
+            </a>
         </div>
 
-        <!-- TABLE -->
-        <div class="bg-white p-6 rounded-xl shadow">
-            <h2 class="text-lg font-semibold mb-4">History Sampah</h2>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6">
+            <h2 class="text-gray-400 text-sm font-semibold uppercase tracking-wider">Total Saldo Eco-Wallet</h2>
+            <h1 class="text-3xl font-extrabold text-primary mt-1">Rp 250.000</h1>
+        </div>
 
-            <table class="w-full">
-                <tr class="text-left border-b">
-                    <th>Nama</th>
-                    <th>Jenis</th>
-                    <th>Berat</th>
-                    <th>Harga</th>
-                </tr>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <h2 class="text-lg font-bold text-primary mb-4">History Sampah Terbaru</h2>
 
-                @forelse($data as $d)
-                <tr class="border-b">
-                    <td>{{ $d->nama }}</td>
-                    <td>{{ $d->jenis }}</td>
-                    <td>{{ $d->berat }} Kg</td>
-                    <td>Rp {{ number_format($d->harga) }}</td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="4" class="text-center py-3">Belum ada data</td>
-                </tr>
-                @endforelse
-            </table>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 font-bold">Nama Sampah</th>
+                            <th scope="col" class="px-6 py-3 font-bold">Jenis</th>
+                            <th scope="col" class="px-6 py-3 font-bold">Berat</th>
+                            <th scope="col" class="px-6 py-3 font-bold">Harga Estimasi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($data as $d)
+                        <tr class="bg-white border-b hover:bg-gray-50 transition">
+                            <td class="px-6 py-4 font-semibold text-gray-800">{{ $d->nama }}</td>
+                            <td class="px-6 py-4">
+                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-primary/10 text-primary">
+                                    {{ $d->jenis }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 font-bold text-gray-700">{{ $d->berat }} Kg</td>
+                            <td class="px-6 py-4 font-bold text-primary">Rp {{ number_format($d->harga, 0, ',', '.') }}</td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="4" class="text-center py-8 text-gray-400 font-medium">
+                                📦 Belum ada data setoran sampah.
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
 
     </div>
-</div>
 
 </body>
 </html>

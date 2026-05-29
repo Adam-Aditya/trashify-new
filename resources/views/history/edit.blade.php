@@ -54,12 +54,13 @@
         <!-- BUTTON -->
         <div class="flex gap-3">
             <button type="submit"
-                class="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800">
+                class="flex-1 bg-[#2d3f1a] text-white px-6 py-3.5 rounded-xl shadow-md transition text-center hover:opacity-90">
+                <i class="fas fa-save mr-1"></i> Simpan Perubahan
                 Simpan Perubahan
             </button>
 
             <a href="/history"
-               class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500">
+               class="px-6 py-3.5 rounded-xl bg-gray-100 text-gray-400 hover:bg-gray-200 transition text-center">
                Batal
             </a>
         </div>

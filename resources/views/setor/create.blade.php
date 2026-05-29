@@ -1,39 +1,93 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-    <title>Setor Sampah</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setor Sampah - Trashify</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3D5524',
+                        gradStart: '#709867',
+                        gradEnd: '#9BB863'
+                    },
+                    fontFamily: {
+                        jakarta: ['Plus Jakarta Sans']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
 </head>
-<body class="bg-gray-100">
+<body class="bg-[#e9f0e4]/50 font-jakarta min-h-screen flex items-center justify-center p-6">
 
-<div class="max-w-xl mx-auto mt-10 bg-white p-6 rounded shadow">
-    <h1 class="text-2xl font-bold mb-4">Setor Sampah</h1>
+<div class="max-w-xl w-full bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
 
-    <form action="/setor-sampah" method="POST">
+    <div class="flex items-center gap-3 mb-6">
+        <div class="w-10 h-10 rounded-xl bg-[#2d3f1a]/10 flex items-center justify-center text-[#2d3f1a] text-lg">
+            <i class="fas fa-recycle"></i>
+        </div>
+        <h1 class="text-2xl font-extrabold text-[#2d3f1a]">Setor Sampah</h1>
+    </div>
+
+    <form action="{{ url('/setor-sampah') }}" method="POST">
         @csrf
 
-        <label>Nama</label>
-        <input type="text" name="nama" class="w-full border p-2 mb-3">
+        <div class="mb-4">
+            <label class="block mb-1 text-sm font-bold text-gray-600">Nama Sampah</label>
+            <input type="text" name="nama" placeholder="Misal: Botol Plastik Aqua"
+                   class="w-full border border-gray-200 p-3 rounded-xl outline-none focus:border-[#2d3f1a] text-gray-800 font-medium transition" required>
+        </div>
 
-        <label>Jenis Sampah</label>
-        <select name="jenis" id="jenis" class="w-full border p-2 mb-3">
-            <option value="plastik">Plastik</option>
-            <option value="kertas">Kertas</option>
-            <option value="logam">Logam</option>
-        </select>
+        <div class="mb-4">
+            <label class="block mb-1 text-sm font-bold text-gray-600">Jenis Sampah</label>
+            <select name="jenis" id="jenis" class="w-full border border-gray-200 p-3 rounded-xl outline-none focus:border-[#2d3f1a] text-gray-800 font-medium transition bg-white">
+                <option value="plastik">Plastik</option>
+                <option value="kertas">Kertas</option>
+                <option value="logam">Logam</option>
+            </select>
+        </div>
 
-        <label>Berat (Kg)</label>
-        <input type="number" step="0.1" name="berat" id="berat" class="w-full border p-2 mb-3">
+        <div class="mb-4">
+            <label class="block mb-1 text-sm font-bold text-gray-600">Berat (Kg)</label>
+            <input type="number" step="0.1" name="berat" id="berat" placeholder="0.0"
+                   class="w-full border border-gray-200 p-3 rounded-xl outline-none focus:border-[#2d3f1a] text-gray-800 font-bold transition" required>
+        </div>
 
-        <label>Harga (otomatis)</label>
-        <input type="text" id="harga" class="w-full border p-2 mb-3 bg-gray-200" readonly>
+        <div class="mb-4">
+            <label class="block mb-1 text-sm font-bold text-gray-400">Harga Estimasi (Otomatis)</label>
+            <input type="text" id="harga"
+                   class="w-full border border-gray-200 p-3 bg-gray-50 text-[#2d3f1a] font-extrabold rounded-xl outline-none cursor-not-allowed"
+                   readonly>
+        </div>
 
-        <label>Deskripsi</label>
-        <textarea name="deskripsi" class="w-full border p-2 mb-3"></textarea>
+        <div class="mb-6">
+            <label class="block mb-1 text-sm font-bold text-gray-600">Deskripsi Pendek</label>
+            <textarea name="deskripsi" rows="3" placeholder="Tambahkan catatan kondisi sampah (opsional)..."
+                      class="w-full border border-gray-200 p-3 rounded-xl outline-none focus:border-[#2d3f1a] text-gray-800 transition"></textarea>
+        </div>
 
-        <button class="bg-green-700 text-white px-4 py-2 rounded">
-            Simpan
-        </button>
+        <div class="flex gap-3 text-sm font-semibold">
+            <button type="submit" 
+                class="flex-1 bg-[#2d3f1a] text-white px-6 py-3.5 rounded-xl shadow-md transition text-center hover:opacity-90">
+                <i class="fas fa-save mr-1"></i> Simpan
+            </button>
+
+            <a href="{{ route('dashboard') }}" 
+               class="px-6 py-3.5 rounded-xl bg-gray-100 text-gray-400 hover:bg-gray-200 transition text-center flex items-center justify-center">
+               Batal
+            </a>
+        </div>
+
     </form>
 </div>
 
@@ -50,7 +104,9 @@
         if (jenis.value === 'logam') hargaPerKg = 6000;
 
         let total = berat.value * hargaPerKg;
-        harga.value = total ? 'Rp ' + total : '';
+        
+        // Memformat tampilan angka menjadi rupiah dengan format ID (Contoh: Rp 15.000)
+        harga.value = total ? 'Rp ' + total.toLocaleString('id-ID') : '';
     }
 
     jenis.addEventListener('change', hitungHarga);
