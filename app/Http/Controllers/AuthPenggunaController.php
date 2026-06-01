@@ -6,6 +6,7 @@ use App\Models\Pengguna;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class AuthPenggunaController extends Controller
 {
@@ -30,9 +31,10 @@ class AuthPenggunaController extends Controller
             'email'    => $request->email,
             'password' => Hash::make($request->password),
             'phone'    => $request->phone,
+            'poin'     => 0, // Nilai awal poin diset 0
         ]);
 
-        // OTOMATIS LOGIN: Setelah daftar berhasil, langsung buat sesi login untuk user ini
+        // AUTOMATIS LOGIN: Setelah daftar berhasil, langsung buat sesi login untuk user ini
         Auth::login($user);
 
         // Alihkan (Redirect) langsung ke halaman dashboard
@@ -72,14 +74,14 @@ class AuthPenggunaController extends Controller
         return redirect()->route('landing'); // Kembali ke landing page setelah logout
     }
 
-    // 4. TAMPILKAN PROFIL (Baru dimasukkan ke sini)
+    // 4. MENAMPILKAN HALAMAN PROFIL (Sudah dimasukkan)
     public function showProfil()
     {
-        $user = Auth::user(); // Ambil data pengguna yang sedang login
-        return view('profil', compact('user')); // Memanggil resources/views/profil.blade.php
+        $user = Auth::user(); 
+        return view('profil', compact('user')); 
     }
 
-    // 5. PROSES UPDATE DATA PROFILsecara Fleksibel (Baru dimasukkan ke sini)
+    // 5. PROSES UPDATE DATA PROFIL SECARA DINAMIS (Sudah dimasukkan)
     public function updateProfil(Request $request)
     {
         $request->validate([
@@ -87,11 +89,12 @@ class AuthPenggunaController extends Controller
             'value' => 'required'
         ]);
 
+        /** @var \App\Models\Pengguna $user */
         $user = Auth::user();
         $field = $request->field;
         $value = $request->value;
 
-        // Validasi tambahan agar tidak kembar dengan pengguna lain
+        // Validasi tambahan agar data unik
         if ($field === 'username' && $value !== $user->username) {
             $request->validate(['value' => 'unique:penggunas,username']);
         }
@@ -99,7 +102,7 @@ class AuthPenggunaController extends Controller
             $request->validate(['value' => 'email|unique:penggunas,email']);
         }
 
-        // Jika mengubah password, enkripsi datanya terlebih dahulu
+        // Jika mengubah password, lakukan enkripsi (Hash)
         if ($field === 'password') {
             if (strlen($value) < 6) {
                 return back()->withErrors(['updateError' => 'Password minimal harus 6 karakter.']);
@@ -107,11 +110,55 @@ class AuthPenggunaController extends Controller
             $value = Hash::make($value);
         }
 
-        // Eksekusi update data ke database 'new_trashify'
+        // Update data pengguna ke database
         $user->update([
             $field => $value
         ]);
 
         return redirect()->route('profil.show')->with('success', 'Data ' . ucfirst($field) . ' berhasil diperbarui!');
+    }
+
+    // 6. MENAMPILKAN HALAMAN TUKAR POIN
+    public function showTukarPoin()
+    {
+        $poin = Auth::user()->poin ?? 0; 
+        return view('tukar-poin', compact('poin'));
+    }
+
+    // 7. MEMPROSES TRANSAKSI PENUKARAN POIN (Ditambahkan Type Hinting)
+    public function prosesTukarPoin(Request $request)
+    {
+        $request->validate([
+            'no_hp'    => 'required',
+            'provider' => 'required',
+            'nominal'  => 'required|numeric|min:1',
+        ]);
+
+        /** @var \App\Models\Pengguna $user */
+        $user = Auth::user();
+        $nominal = (int) $request->nominal;
+
+        // Validasi kecukupan poin
+        if ($user->poin < $nominal) {
+            return back()->withErrors(['tukarError' => 'Poin Anda tidak mencukupi untuk penukaran ini.'])->withInput();
+        }
+
+        // Menggunakan Database Transaction agar jika salah satu query gagal, data otomatis aman (Rollback)
+        DB::transaction(function () use ($user, $request, $nominal) {
+            // Kurangi poin pengguna di tabel penggunas
+            $user->decrement('poin', $nominal);
+
+            // Catat data ke tabel transaksi_tukar
+            DB::table('transaksi_tukar')->insert([
+                'user_id'    => $user->id,
+                'provider'   => $request->provider,
+                'nominal'    => $nominal,
+                'no_hp'      => $request->no_hp,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        });
+
+        return redirect()->route('dashboard')->with('success', 'Penukaran poin sebesar Rp ' . number_format($nominal, 0, ',', '.') . ' berhasil!');
     }
 }

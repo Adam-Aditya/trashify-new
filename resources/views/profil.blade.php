@@ -53,7 +53,7 @@
                 <i class="fas fa-history"></i> Riwayat
             </a>
 
-            <a href="#" class="px-5 py-3 rounded-xl flex items-center gap-3 text-green-100 hover:bg-white/10 transition">
+            <a href="{{ route('poin.tukar') }}" class="px-5 py-3 rounded-xl flex items-center gap-3 text-green-100 hover:bg-white/10 transition">
                 <i class="fas fa-wallet"></i> Wallet
             </a>
 

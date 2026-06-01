@@ -52,7 +52,7 @@
                     <i class="fas fa-history"></i> Riwayat
                 </a>
 
-                <a href="#" class="px-5 py-3 rounded-xl flex items-center gap-3 text-green-100 hover:bg-white/10 transition">
+                <a href="{{ route('poin.tukar') }}" class="px-5 py-3 rounded-xl flex items-center gap-3 text-green-100 hover:bg-white/10 transition">
                     <i class="fas fa-wallet"></i> Wallet
                 </a>
 
@@ -74,8 +74,25 @@
 
     <div class="flex-1 ml-[280px] p-10 h-screen overflow-y-auto">
 
-        <h1 class="text-3xl font-extrabold text-primary mb-6">Impact Dashboard</h1>
-        
+        <header class="flex justify-between items-center mb-10">
+            <h2 class="text-xl font-extrabold text-primary">
+                Dashboard <span class="text-gray-400 font-normal text-sm">/ Beranda</span>
+            </h2>
+
+            <a href="{{ route('poin.tukar') }}" 
+               class="bg-white flex items-center gap-3 rounded-full pl-3 pr-5 py-1.5 border border-gray-100 shadow-sm hover:shadow-md hover:border-primary/20 transition group">
+                <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-bold">
+                    {{ strtoupper(substr(Auth::user()->username, 0, 1)) }}
+                </div>
+                <div>
+                    <div class="text-xs font-extrabold text-primary">
+                        <span id="userPoin">{{ number_format(Auth::user()->poin ?? 0, 0, ',', '.') }} Poin</span>
+                    </div>
+                    <div class="text-[10px] text-gray-400 font-medium group-hover:text-primary transition">Tukar Poin →</div>
+                </div>
+            </a>
+        </header>
+
         <div class="bg-gradient-to-r from-gradStart to-gradEnd text-white p-6 rounded-2xl shadow-lg mb-6">
             <h2 class="text-xl font-bold">Circular Milestone</h2>
             <p class="text-white/90 text-sm mt-1">Kamu sudah berkontribusi dalam pengelolaan sampah 🎉</p>
@@ -99,13 +116,8 @@
             </a>
         </div>
 
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6">
-            <h2 class="text-gray-400 text-sm font-semibold uppercase tracking-wider">Total Saldo Eco-Wallet</h2>
-            <h1 class="text-3xl font-extrabold text-primary mt-1">Rp 250.000</h1>
-        </div>
-
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-            <h2 class="text-lg font-bold text-primary mb-4">History Sampah Terbaru</h2>
+            <h2 class="text-lg font-bold text-primary mb-4">Riwayat Sampah Terbaru</h2>
 
             <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left text-gray-500">

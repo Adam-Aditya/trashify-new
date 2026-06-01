@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('password');
             $table->string('phone');
             $table->string('location')->nullable();
+            $table->integer('poin')->default(0);
             $table->timestamps();
         });
     }

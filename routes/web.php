@@ -24,6 +24,10 @@ Route::get('/dashboard', function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/profil', [AuthPenggunaController::class, 'showProfil'])->name('profil.show');
     Route::post('/profil/update', [AuthPenggunaController::class, 'updateProfil'])->name('profil.update');
+
+    // Pastikan diletakkan di dalam Route::middleware(['auth'])->group(function () { ... })
+    Route::get('/tukar-poin', [AuthPenggunaController::class, 'showTukarPoin'])->name('poin.tukar');
+    Route::post('/tukar-poin', [AuthPenggunaController::class, 'prosesTukarPoin'])->name('poin.proses');
 });
 
 Route::resource('sampah', SampahController::class);
