@@ -48,7 +48,7 @@
             class="px-4 py-2 text-sm text-white/80 hover:bg-white/20 rounded-lg flex items-center">
                 Login
             </a>
-            <a class="px-5 py-2 bg-white text-primary rounded-xl font-semibold hover:bg-gray-100 flex items-center">
+            <a href="{{ route('pengepul.auth') }}" class="px-5 py-2 bg-white text-primary rounded-xl font-semibold hover:bg-gray-100 flex items-center transition">
                 Jadi Mitra
             </a>
         </div>
@@ -86,6 +86,7 @@
             </a>
 
             <a 
+            <a href="{{ route('pengepul.auth') }}" 
             class="px-6 py-3 bg-white text-primary rounded-xl font-bold hover:bg-gray-100 transition text-center">
                 Jadi Mitra
             </a>

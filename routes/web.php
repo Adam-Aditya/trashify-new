@@ -5,6 +5,7 @@ use App\Http\Controllers\SampahController;
 use App\Http\Controllers\SetorSampahController;
 use App\Models\SetorSampah;
 use App\Http\Controllers\AuthPenggunaController;
+use App\Http\Controllers\AuthPengepulController;
 
 Route::get('/', function () {
     return view('landing');
@@ -30,6 +31,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/tukar-poin', [AuthPenggunaController::class, 'prosesTukarPoin'])->name('poin.proses');
 });
 
+
 Route::resource('sampah', SampahController::class);
 
 Route::get('/setor-sampah', [SetorSampahController::class, 'create'])->name('setor.create');
@@ -44,3 +46,21 @@ Route::get('/login-user', [AuthPenggunaController::class, 'showForm'])->name('lo
 Route::post('/proses-signup', [AuthPenggunaController::class, 'register'])->name('register.process');
 Route::post('/proses-login', [AuthPenggunaController::class, 'login'])->name('login.process');
 Route::post('/logout', [AuthPenggunaController::class, 'logout'])->name('logout');
+
+// ROUTE UNTUK PENGEPUL
+
+// Route Auth Pengepul
+Route::get('/mitra/auth', [AuthPengepulController::class, 'showForm'])->name('pengepul.auth');
+Route::post('/mitra/register', [AuthPengepulController::class, 'register'])->name('pengepul.register.process');
+Route::post('/mitra/login', [AuthPengepulController::class, 'login'])->name('pengepul.login.process');
+
+// Proteksi Pengisian Kategori Toko menggunakan Middleware Auth Guard Pengepul
+Route::middleware(['auth:pengepul'])->group(function () {
+    Route::get('/mitra/kategori-toko', [AuthPengepulController::class, 'showKategoriToko'])->name('pengepul.toko');
+    Route::post('/mitra/kategori-toko', [AuthPengepulController::class, 'simpanKategoriToko'])->name('pengepul.toko.save');
+    
+    // Halaman dashboard pengepul sementara
+    Route::get('/dashboard-pengepul', function() {
+        return "Selamat datang di Dashboard Pengepul Mitra Trashify!";
+    });
+});
