@@ -27,12 +27,10 @@
         </div>
 
         <form action="{{ route('pengepul.toko.save') }}" method="POST" class="space-y-6">
-            @csrf
-
-            <div>
+            @csrf <div>
                 <label class="block mb-2 text-sm font-bold text-gray-700">Nama Toko / Lapak</label>
                 <input type="text" name="nama_toko" placeholder="Contoh: UD Jaya Plastik" required
-                       class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-primary text-gray-800 transition">
+                       class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-primary focus:ring-1 focus:ring-primary text-gray-800 transition">
             </div>
 
             <div>
@@ -44,10 +42,12 @@
                         <input type="checkbox" name="kategori[]" value="plastik" class="w-5 h-5 accent-primary rounded">
                         <span class="font-semibold text-gray-700">Plastik (Botol, Gelas, dll)</span>
                     </label>
+                    
                     <label class="flex items-center gap-3 p-3 border border-gray-100 rounded-xl cursor-pointer hover:bg-gray-50 transition">
                         <input type="checkbox" name="kategori[]" value="kertas" class="w-5 h-5 accent-primary rounded">
                         <span class="font-semibold text-gray-700">Kertas (Kardus, Koran, Arsip)</span>
                     </label>
+                    
                     <label class="flex items-center gap-3 p-3 border border-gray-100 rounded-xl cursor-pointer hover:bg-gray-50 transition">
                         <input type="checkbox" name="kategori[]" value="logam" class="w-5 h-5 accent-primary rounded">
                         <span class="font-semibold text-gray-700">Logam (Besi, Tembaga, Alumunium)</span>

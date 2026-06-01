@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('phone');
             $table->string('nama_toko')->nullable();
             $table->string('kategori_sampah')->nullable(); // Menyimpan data array/json kategori
+            $table->boolean('is_buka')->default(0);
             $table->timestamps();
         });
     }

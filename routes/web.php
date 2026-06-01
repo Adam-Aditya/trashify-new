@@ -56,11 +56,17 @@ Route::post('/mitra/login', [AuthPengepulController::class, 'login'])->name('pen
 
 // Proteksi Pengisian Kategori Toko menggunakan Middleware Auth Guard Pengepul
 Route::middleware(['auth:pengepul'])->group(function () {
+    
+    // Pengisian Kategori & Data Toko Pertama Kali
     Route::get('/mitra/kategori-toko', [AuthPengepulController::class, 'showKategoriToko'])->name('pengepul.toko');
     Route::post('/mitra/kategori-toko', [AuthPengepulController::class, 'simpanKategoriToko'])->name('pengepul.toko.save');
     
-    // Halaman dashboard pengepul sementara
-    Route::get('/dashboard-pengepul', function() {
-        return "Selamat datang di Dashboard Pengepul Mitra Trashify!";
-    });
+    // Dashboard Utama Pengepul
+    Route::get('/dashboard-pengepul', [AuthPengepulController::class, 'showDashboard'])->name('pengepul.dashboard');
+    
+    // API Perubahan Status Buka/Tutup Toko (AJAX)
+    Route::post('/mitra/toggle-status', [AuthPengepulController::class, 'toggleStatus'])->name('pengepul.toggle');
+    
+    // TAMBAHKAN INI: Proses Keluar Akun Khusus Pengepul
+    Route::post('/mitra/logout', [AuthPengepulController::class, 'logout'])->name('pengepul.logout');
 });

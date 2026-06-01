@@ -6,6 +6,7 @@ use App\Models\Pengepul;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class AuthPengepulController extends Controller
 {
@@ -46,9 +47,9 @@ class AuthPengepulController extends Controller
         if (Auth::guard('pengepul')->attempt([$field => $credentials['username'], 'password' => $credentials['password']])) {
             $request->session()->regenerate();
             
-            // Jika sudah ada nama toko langsung ke dashboard mereka, jika belum ke form kategori toko
+            // DIUBAH: Jika sudah ada nama toko, arahkan menggunakan named route dashboard pengepul
             if (Auth::guard('pengepul')->user()->nama_toko) {
-                return response()->json(['status' => 'success', 'redirect' => '/dashboard-pengepul']);
+                return response()->json(['status' => 'success', 'redirect' => route('pengepul.dashboard')]);
             }
             return response()->json(['status' => 'success', 'redirect' => route('pengepul.toko')]);
         }
@@ -74,6 +75,26 @@ class AuthPengepulController extends Controller
             'kategori_sampah' => implode(',', $request->kategori) // disimpan berupa string koma: plastik,kertas
         ]);
 
-        return redirect('/dashboard-pengepul')->with('success', 'Profil Toko Berhasil Disimpan!');
+        // DIUBAH: Setelah simpan, alihkan resmi ke named route dashboard pengepul
+        return redirect()->route('pengepul.dashboard')->with('success', 'Profil Toko Berhasil Disimpan!');
+    }
+
+    public function showDashboard() {
+        return view('dashboard-pengepul');
+    }
+
+    public function toggleStatus(Request $request) {
+        $request->validate([
+            'is_buka' => 'required|in:0,1'
+        ]);
+
+        /** @var \App\Models\Pengepul $pengepul */
+        $pengepul = Auth::guard('pengepul')->user();
+        
+        $pengepul->update([
+            'is_buka' => $request->is_buka
+        ]);
+
+        return response()->json(['status' => 'success']);
     }
 }
