@@ -6,6 +6,7 @@ use App\Http\Controllers\SetorSampahController;
 use App\Models\SetorSampah;
 use App\Http\Controllers\AuthPenggunaController;
 use App\Http\Controllers\AuthPengepulController;
+use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
     return view('landing');
@@ -17,7 +18,7 @@ Route::get('/dashboard', function () {
 })->name('dashboard');
 
 Route::get('/dashboard', function () {
-    $data = App\Models\SetorSampah::latest()->get();
+    $data = App\Models\SetorSampah::where('user_id', Auth::id())->latest()->get();
     return view('dashboard', compact('data'));
 })->name('dashboard');
 
