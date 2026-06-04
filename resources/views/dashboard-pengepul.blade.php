@@ -43,14 +43,20 @@
             </div>
 
             <nav class="flex flex-col gap-2">
-                <a href="#" class="bg-white/20 px-5 py-3 rounded-xl flex items-center gap-3 font-semibold transition">
+                <a href="{{ route('pengepul.dashboard') }}" class="px-5 py-3 rounded-xl flex items-center gap-3 text-green-100 hover:bg-white/10 transition">
                     <i class="fas fa-th-large"></i> Dashboard
                 </a>
+
                 <a href="#" class="px-5 py-3 rounded-xl flex items-center gap-3 text-green-100 hover:bg-white/10 transition">
-                    <i class="fas fa-store"></i> Profil Toko
+                    <i class="fas fa-history"></i> Riwayat
                 </a>
-                <a href="#" class="px-5 py-3 rounded-xl flex items-center gap-3 text-green-100 hover:bg-white/10 transition">
-                    <i class="fas fa-history"></i> Riwayat Masuk
+
+                <a href="{{ route('pengepul.poin.tukar') }}" class="px-5 py-3 rounded-xl flex items-center gap-3 text-green-100 hover:bg-white/10 transition">
+                    <i class="fas fa-wallet"></i> Wallet
+                </a>
+
+                <a href="{{ route('pengepul.profil') }}" class="px-5 py-3 rounded-xl flex items-center gap-3 text-green-100 hover:bg-white/10 transition">
+                    <i class="fas fa-user"></i> Profil Toko
                 </a>
             </nav>
         </div>

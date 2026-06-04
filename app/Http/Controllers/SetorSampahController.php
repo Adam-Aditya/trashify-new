@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\SetorSampah;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth; // 🛠️ WAJIB DIAWALI IMPORT INI AGAR AUTH::ID() BERFUNGSI
 
 class SetorSampahController extends Controller
 {
@@ -12,7 +13,11 @@ class SetorSampahController extends Controller
      */
     public function index()
     {
-        $data = \App\Models\SetorSampah::latest()->get();
+        // 🛠️ SINKRONISASI PRIVASI: Hanya mengambil data sampah milik user yang sedang login
+        $data = SetorSampah::where('user_id', Auth::id())
+                            ->latest()
+                            ->get();
+
         return view('history.index', compact('data'));
     }
 
@@ -29,23 +34,34 @@ class SetorSampahController extends Controller
      */
     public function store(Request $request)
     {
-        $hargaPerKg = match ($request->jenis) {
+        $request->validate([
+            'nama' => 'required|string|max:255',
+            'jenis' => 'required|string',
+            'berat' => 'required|numeric',
+        ]);
+
+        // Menggunakan strtolower() agar aman jika value form bernilai huruf kecil maupun kapital
+        $hargaPerKg = match (strtolower($request->jenis)) {
             'plastik' => 3000,
-            'kertas' => 5000,
-            'logam' => 6000,
+            'kertas'  => 5000,
+            'logam'   => 6000,
+            default   => 0
         };
 
         // Hitung total harga
         $totalHarga = $request->berat * $hargaPerKg;
 
+        // Simpan data dengan mengikat id user yang sedang login
         SetorSampah::create([
-            'nama' => $request->nama,
-            'jenis' => $request->jenis,
-            'berat' => $request->berat,
-            'harga' => $totalHarga,
+            'user_id'   => Auth::id(), // 🛠️ KUNCI UTAMA: Mengunci kepemilikan data sampah
+            'nama'      => $request->nama,
+            'jenis'     => $request->jenis,
+            'berat'     => $request->berat,
+            'harga'     => $totalHarga,
             'deskripsi' => $request->deskripsi,
         ]);
-        return redirect('/dashboard')->with('success', 'Setor berhasil!');
+
+        return redirect('/dashboard')->with('success', 'Setor sampah berhasil dicatat!');
     }
 
     /**
@@ -61,7 +77,9 @@ class SetorSampahController extends Controller
      */
     public function edit(int $id)
     {
-        $data = \App\Models\SetorSampah::findOrFail($id);
+        // Memastikan user tidak bisa mengintip/mengedit data sampah milik user lain lewat URL id
+        $data = SetorSampah::where('user_id', Auth::id())->findOrFail($id);
+
         return view('history.edit', compact('data'));
     }
 
@@ -70,19 +88,27 @@ class SetorSampahController extends Controller
      */
     public function update(Request $request, int $id)
     {
-        $data = \App\Models\SetorSampah::findOrFail($id);
+        $request->validate([
+            'nama' => 'required|string|max:255',
+            'jenis' => 'required|string',
+            'berat' => 'required|numeric',
+        ]);
 
-        $hargaPerKg = match ($request->jenis) {
+        // Memastikan data yang diupdate adalah mutlak milik user yang login
+        $data = SetorSampah::where('user_id', Auth::id())->findOrFail($id);
+
+        $hargaPerKg = match (strtolower($request->jenis)) {
             'plastik' => 3000,
-            'kertas' => 5000,
-            'logam' => 6000,
+            'kertas'  => 5000,
+            'logam'   => 6000,
+            default   => 0
         };
 
         $data->update([
-            'nama' => $request->nama,
-            'jenis' => $request->jenis,
-            'berat' => $request->berat,
-            'harga' => $request->berat * $hargaPerKg,
+            'nama'      => $request->nama,
+            'jenis'     => $request->jenis,
+            'berat'     => $request->berat,
+            'harga'     => $request->berat * $hargaPerKg,
             'deskripsi' => $request->deskripsi,
         ]);
 
@@ -94,7 +120,10 @@ class SetorSampahController extends Controller
      */
     public function destroy(int $id)
     {
-        \App\Models\SetorSampah::destroy($id);
+        // Memastikan data yang dihapus adalah mutlak milik user yang login
+        $data = SetorSampah::where('user_id', Auth::id())->findOrFail($id);
+        $data->delete();
+
         return redirect('/history')->with('success', 'Data berhasil dihapus');
     }
 }

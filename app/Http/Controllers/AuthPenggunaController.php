@@ -74,17 +74,18 @@ class AuthPenggunaController extends Controller
         return redirect()->route('landing'); // Kembali ke landing page setelah logout
     }
 
-    // 4. MENAMPILKAN HALAMAN PROFIL (Sudah dimasukkan)
+    // 4. MENAMPILKAN HALAMAN PROFIL
     public function showProfil()
     {
         $user = Auth::user(); 
         return view('profil', compact('user')); 
     }
 
-    // 5. PROSES UPDATE DATA PROFIL SECARA DINAMIS (Sudah dimasukkan)
+    // 5. PROSES UPDATE DATA PROFIL SECARA DINAMIS
     public function updateProfil(Request $request)
     {
         $request->validate([
+            // Sudah aman: parameter 'location' murni huruf kecil sesuai trigger JavaScript
             'field' => 'required|in:username,email,password,phone,location',
             'value' => 'required'
         ]);
@@ -115,7 +116,8 @@ class AuthPenggunaController extends Controller
             $field => $value
         ]);
 
-        return redirect()->route('profil.show')->with('success', 'Data ' . ucfirst($field) . ' berhasil diperbarui!');
+        // Mengembalikan rute dengan membawa session success dinamis (Contoh: "Data Location berhasil diperbarui!")
+        return redirect()->back()->with('success', 'Data ' . ucfirst($field) . ' berhasil diperbarui!');
     }
 
     // 6. MENAMPILKAN HALAMAN TUKAR POIN
@@ -125,7 +127,7 @@ class AuthPenggunaController extends Controller
         return view('tukar-poin', compact('poin'));
     }
 
-    // 7. MEMPROSES TRANSAKSI PENUKARAN POIN (Ditambahkan Type Hinting)
+    // 7. MEMPROSES TRANSAKSI PENUKARAN POIN
     public function prosesTukarPoin(Request $request)
     {
         $request->validate([

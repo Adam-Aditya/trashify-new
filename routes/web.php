@@ -70,3 +70,16 @@ Route::middleware(['auth:pengepul'])->group(function () {
     // TAMBAHKAN INI: Proses Keluar Akun Khusus Pengepul
     Route::post('/mitra/logout', [AuthPengepulController::class, 'logout'])->name('pengepul.logout');
 });
+
+Route::middleware(['auth:pengepul'])->group(function () {
+    // Jalur rute profil pengepul
+    Route::get('/mitra/profil', [AuthPengepulController::class, 'showProfil'])->name('pengepul.profil');
+    Route::post('/mitra/profil/update', [AuthPengepulController::class, 'updateProfil'])->name('pengepul.profil.update');
+});
+
+Route::middleware(['auth:pengepul'])->group(function () {
+    Route::get('/mitra/wallet/topup', [AuthPengepulController::class, 'showTopupForm'])->name('pengepul.poin.tukar'); // Sesuaikan name rute link sidebar kamu
+    Route::post('/mitra/wallet/topup/proses', [AuthPengepulController::class, 'prosesTopup'])->name('pengepul.poin.proses');
+});
+
+Route::post('/mitra/logout', [AuthPengepulController::class, 'logout'])->name('pengepul.logout');

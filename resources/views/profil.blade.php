@@ -135,10 +135,15 @@
                 </p>
             </div>
 
-            <div onclick="editField('Location')" class="cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition">
-                <p class="text-xs text-gray-400 font-bold">LOCATION <span class="text-primary text-[10px] ml-1"><i class="fas fa-edit"></i> Ubah</span></p>
+            <div onclick="getCityLocation()" class="cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition group">
+                <p class="text-xs text-gray-400 font-bold uppercase">
+                    KOTA / LOKASI ANDA 
+                    <span id="locationBtnText" class="text-primary text-[10px] ml-1 transition group-hover:underline">
+                        <i class="fas fa-map-marker-alt"></i> Deteksi Kota Otomatis
+                    </span>
+                </p>
                 <p id="locationText" class="border-b pb-2 text-gray-800 font-medium mt-1">
-                    {{ $user->location ?? 'Belum diatur' }}
+                    {{ Auth::user()->location ?? 'Belum diatur' }}
                 </p>
             </div>
         </div>
@@ -224,6 +229,67 @@ function saveData() {
     document.getElementById("valueInput").value = value;
 
     document.getElementById("updateForm").submit();
+}
+function getCityLocation() {
+    const locationText = document.getElementById("locationText");
+    const btnText = document.getElementById("locationBtnText");
+
+    if (!navigator.geolocation) {
+        return alert("Browser Anda tidak mendukung deteksi lokasi otomatis.");
+    }
+
+    // Set UI Loading
+    btnText.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Meminta Akses GPS...`;
+    locationText.innerText = "Menghubungkan ke satelit GPS...";
+
+    navigator.geolocation.getCurrentPosition(
+        function (position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+
+            locationText.innerText = "Menerjemahkan koordinat menjadi nama kota...";
+            btnText.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Mencari Kota...`;
+
+            // REVERSE GEOCODING menggunakan OpenStreetMap Nominatim API
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+                .then(response => response.json())
+                .then(data => {
+                    const address = data.address;
+                    let namaKota = address.city || address.regency || address.town || address.county || address.municipality || "Kota Tidak Terdeteksi";
+
+                    // Rapikan lokalisasi penamaan teks regional Indonesia
+                    namaKota = namaKota.replace("Regency", "Kabupaten").trim();
+
+                    locationText.innerText = `Terdeteksi: ${namaKota}`;
+                    btnText.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Menyimpan...`;
+
+                    // Masukkan nilai parameter ke form tersembunyi (updateForm) milik Pengguna
+                    document.getElementById("fieldInput").value = "location"; 
+                    document.getElementById("valueInput").value = namaKota;
+                    
+                    // Submit otomatis ke Controller Pengguna
+                    document.getElementById("updateForm").submit();
+                })
+                .catch(err => {
+                    console.error(err);
+                    btnText.innerHTML = `<i class="fas fa-map-marker-alt"></i> Deteksi Kota Otomatis`;
+                    locationText.innerText = "Gagal menerjemahkan nama kota. Coba lagi.";
+                    alert("Gagal mengambil data kota dari server geocoding.");
+                });
+        },
+        function (error) {
+            // Fallback teks jika GPS dimatikan atau akses ditolak pengguna
+            btnText.innerHTML = `<i class="fas fa-map-marker-alt"></i> Deteksi Kota Otomatis`;
+            locationText.innerText = "{{ Auth::user()->location ?? 'Belum diatur' }}";
+            
+            if (error.code === error.PERMISSION_DENIED) {
+                alert("Akses ditolak. Mohon izinkan permission lokasi pada pengaturan browser Anda.");
+            } else {
+                alert("Gagal mendeteksi koordinat GPS perangkat. Pastikan GPS/Lokasi perangkat Anda aktif.");
+            }
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+    );
 }
 </script>
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Sampah;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class SampahController extends Controller
 {
@@ -12,8 +13,14 @@ class SampahController extends Controller
      */
     public function index()
     {
-        $data = Sampah::all();
-        return view('sampah.index', compact('data'));
+        $userId = Auth::id();
+
+        $data = Sampah::where('user_id', $userId)
+                      ->orderBy('created_at', 'desc')
+                      ->get();
+
+        // 3. Kirim data yang sudah disaring ke view riwayat
+        return view('history.index', compact('data'));
     }
 
     /**

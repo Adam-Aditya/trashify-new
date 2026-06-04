@@ -101,11 +101,12 @@
                         <tr class="bg-white border-b hover:bg-gray-50 transition">
                             <td class="px-6 py-4 font-semibold text-gray-800">{{ $d->nama }}</td>
                             <td class="px-6 py-4">
-                                @if($d->jenis == 'plastik')
+                                {{-- 🛠️ PERBAIKAN: Menggunakan strtolower agar pencocokan warna badge tidak sensitif huruf besar/kecil --}}
+                                @if(strtolower($d->jenis) == 'plastik')
                                     <span class="px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Plastik</span>
-                                @elseif($d->jenis == 'kertas')
+                                @elseif(strtolower($d->jenis) == 'kertas')
                                     <span class="px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Kertas</span>
-                                @elseif($d->jenis == 'logam')
+                                @elseif(strtolower($d->jenis) == 'logam')
                                     <span class="px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Logam</span>
                                 @else
                                     <span class="px-3 py-1 text-xs font-semibold rounded-full bg-primary/10 text-primary">{{ $d->jenis }}</span>

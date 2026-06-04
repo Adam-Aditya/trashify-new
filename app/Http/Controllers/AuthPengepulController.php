@@ -47,7 +47,7 @@ class AuthPengepulController extends Controller
         if (Auth::guard('pengepul')->attempt([$field => $credentials['username'], 'password' => $credentials['password']])) {
             $request->session()->regenerate();
             
-            // DIUBAH: Jika sudah ada nama toko, arahkan menggunakan named route dashboard pengepul
+            // Jika sudah ada nama toko, arahkan menggunakan named route dashboard pengepul
             if (Auth::guard('pengepul')->user()->nama_toko) {
                 return response()->json(['status' => 'success', 'redirect' => route('pengepul.dashboard')]);
             }
@@ -75,7 +75,6 @@ class AuthPengepulController extends Controller
             'kategori_sampah' => implode(',', $request->kategori) // disimpan berupa string koma: plastik,kertas
         ]);
 
-        // DIUBAH: Setelah simpan, alihkan resmi ke named route dashboard pengepul
         return redirect()->route('pengepul.dashboard')->with('success', 'Profil Toko Berhasil Disimpan!');
     }
 
@@ -96,5 +95,89 @@ class AuthPengepulController extends Controller
         ]);
 
         return response()->json(['status' => 'success']);
+    }
+
+    public function showProfil() {
+        return view('profil-pengepul');
+    }
+
+    public function updateProfil(Request $request) {
+        $request->validate([
+            'field' => 'required|in:username,email,password,phone,location,nama_toko,kategori_sampah',
+            'value' => 'required'
+        ]);
+
+        /** @var \App\Models\Pengepul $pengepul */
+        $pengepul = Auth::guard('pengepul')->user();
+        $field = $request->field;
+        $value = $request->value;
+
+        // Validasi unik jika mengubah username/email
+        if ($field === 'username' && $value !== $pengepul->username) {
+            $request->validate(['value' => 'unique:pengepuls,username']);
+        }
+        if ($field === 'email' && $value !== $pengepul->email) {
+            $request->validate(['value' => 'email|unique:pengepuls,email']);
+        }
+        if ($field === 'password') {
+            $request->validate(['value' => 'min:6']);
+            $value = Hash::make($value);
+        }
+
+        // Eksekusi update ke database
+        $pengepul->update([
+            $field => $value
+        ]);
+
+        return redirect()->route('pengepul.profil')->with('success', 'Informasi lapak berhasil diperbarui!');
+    }
+
+    // Fungsi untuk menampilkan halaman form top up poin
+    public function showTopupForm() 
+    {
+        return view('topup-poin');
+    }
+
+    // Fungsi untuk memproses data saldo top up masuk
+    public function prosesTopup(Request $request)
+    {
+        $request->validate([
+            'nomor_rekening' => 'required|string',
+            'metode'         => 'required|string',
+            'nominal'        => 'required|numeric|min:50000'
+        ]);
+
+        // 1. Ambil data pengepul yang sedang login
+        $userLogin = Auth::guard('pengepul')->user();
+        $jumlahTopup = (int) $request->nominal;
+
+        // 2. 🛠️ AMBIL MODEL ASLI DARI DATABASE (Agar bisa di-save tanpa eror)
+        $pengepul = \App\Models\Pengepul::find($userLogin->id);
+
+        // 3. Hitung dan masukkan poin baru
+        $pengepul->poin = ($pengepul->poin ?? 0) + $jumlahTopup;
+
+        // 4. Simpan ke Database
+        $pengepul->save(); 
+
+        // 5. Kembali ke halaman dengan notifikasi sukses
+        return redirect()->back()->with(
+            'success', 
+            'Selamat! Top up saldo sebesar ' . number_format($jumlahTopup, 0, ',', '.') . ' Poin berhasil ditambahkan ke akun lapak Anda.'
+        );
+    }
+
+    /**
+     * 🛠️ TAMBAHAN BARU: Fungsi resmi untuk mengeluarkan sesi login Pengepul
+     */
+    public function logout(Request $request) 
+    {
+        Auth::guard('pengepul')->logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        // Alihkan kembali ke halaman utama login/register pengepul
+        return redirect()->route('landing')->with('success', 'Anda telah berhasil keluar dari akun.');
     }
 }

@@ -16,8 +16,11 @@ class Pengepul extends Authenticatable
         'email',
         'password',
         'phone',
+        'location',
         'nama_toko',
-        'kategori_sampah'
+        'kategori_sampah',
+        'is_buka',
+        'poin',
     ];
 
     protected $hidden = [
