@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trashify Dashboard Pengepul</title>
+    <title>Dashboard Pengepul - Trashify</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <script>
         tailwind.config = {
@@ -47,7 +48,7 @@
                     <i class="fas fa-th-large"></i> Dashboard
                 </a>
 
-                <a href="#" class="px-5 py-3 rounded-xl flex items-center gap-3 text-green-100 hover:bg-white/10 transition">
+                <a href="{{ route('pengepul.riwayat') }}" class="px-5 py-3 rounded-xl flex items-center gap-3 text-green-100 hover:bg-white/10 transition">
                     <i class="fas fa-history"></i> Riwayat
                 </a>
 
@@ -87,19 +88,97 @@
         </header>
 
         <div class="bg-gradient-to-r from-gradStart to-gradEnd text-white p-6 rounded-2xl shadow-lg mb-6">
-            <h2 class="text-xl font-bold">Laporan Transaksi Harian</h2>
-            <p class="text-white/90 text-sm mt-1">Pantau perkembangan pasokan sampah masuk hari ini 📈</p>
+            <h2 class="text-xl font-bold">Ringkasan Transaksi</h2>
 
-            <div class="flex gap-4 mt-4">
-                <div class="bg-primary/20 backdrop-blur-sm p-4 rounded-xl min-w-[140px]">
-                    <p class="text-xs text-white/80">Sampah Diterima</p>
-                    <h3 class="text-xl font-bold mt-1">48.2 Kg</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                
+                <div class="bg-primary/20 backdrop-blur-sm p-4 rounded-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center gap-2 text-green-100 opacity-90 mb-1">
+                            <i class="fas fa-weight-hanging text-sm"></i>
+                            <p class="text-xs font-semibold uppercase tracking-wider">Berat Sampah Diterima</p>
+                        </div>
+                        <h3 class="text-2xl font-black mt-1">
+                            {{ number_format($totalBerat ?? 0, 1, ',', '.') }} 
+                            <span class="text-sm font-normal text-white/80">Kg</span>
+                        </h3>
+                    </div>
                 </div>
-                <div class="bg-primary/20 backdrop-blur-sm p-4 rounded-xl min-w-[140px]">
-                    <p class="text-xs text-white/80">Total Pengeluaran</p>
-                    <h3 class="text-xl font-bold mt-1">Rp 185.000</h3>
+                
+                <div class="bg-primary/20 backdrop-blur-sm p-4 rounded-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center gap-2 text-green-100 opacity-90 mb-1">
+                            <i class="fas fa-truck text-sm"></i>
+                            <p class="text-xs font-semibold uppercase tracking-wider">Total Penjemputan</p>
+                        </div>
+                        <h3 class="text-2xl font-black mt-1">
+                            {{ $totalPenjemputan ?? 0 }} 
+                            <span class="text-sm font-normal text-white/80">History</span>
+                        </h3>
+                    </div>
+                </div>
+
+                <div class="bg-primary/20 backdrop-blur-sm p-4 rounded-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center gap-2 text-green-100 opacity-90 mb-1">
+                            <i class="fas fa-coins text-sm"></i>
+                            <p class="text-xs font-semibold uppercase tracking-wider">Total Poin Keluar</p>
+                        </div>
+                        <h3 class="text-2xl font-black mt-1 text-red-500">
+                            <span class="text-sm font-bold text-red-500/80">-</span> 
+                            {{ number_format($totalPoinKeluar ?? 0, 0, ',', '.') }}
+                        </h3>
+                    </div>
+                </div>
+
+                <div class="bg-primary/20 backdrop-blur-sm p-4 rounded-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center gap-2 text-green-100 opacity-90 mb-1">
+                            <i class="fas fa-wallet text-sm"></i>
+                            <p class="text-xs font-semibold uppercase tracking-wider">Poin Saat Ini</p>
+                        </div>
+                        <h3 class="text-2xl font-black mt-1">
+                            <span class="text-sm font-bold text-white/80">Pts</span> 
+                            {{ number_format(Auth::guard('pengepul')->user()->poin ?? 0, 0, ',', '.') }}
+                        </h3>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-6 mb-6">
+            
+            <div class="w-full lg:w-2/3 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 class="font-bold text-primary text-lg flex items-center gap-2">
+                            <i class="fas fa-chart-bar text-gradStart"></i> Laporan Penjemputan Mingguan
+                        </h3>
+                        <p class="text-gray-400 text-xs mt-0.5">Analisis kuantitas aktivitas penjemputan sampah.</p>
+                    </div>
+                    <span class="text-xs font-bold px-3 py-1 bg-[#e9f0e4] text-primary rounded-lg">Kuantitas</span>
+                </div>
+                <div class="w-full relative h-[260px]">
+                    <canvas id="pickupChart"></canvas>
                 </div>
             </div>
+
+            <div class="w-full lg:w-1/3 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 class="font-bold text-primary text-lg flex items-center gap-2">
+                            <i class="fas fa-chart-line text-gradEnd"></i> Distribusi Jenis
+                        </h3>
+                        <p class="text-gray-400 text-xs mt-0.5">Total tonase masuk per kategori (Kg).</p>
+                    </div>
+                    <span class="text-xs font-bold px-3 py-1 bg-gray-100 text-gray-600 rounded-lg">Kategori</span>
+                </div>
+                <div class="w-full relative h-[260px]">
+                    <canvas id="categoryLineChart"></canvas>
+                </div>
+            </div>
+
         </div>
 
         <div class="mb-6 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
@@ -115,65 +194,143 @@
         </div>
 
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-        <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-bold text-primary">Daftar Transaksi Sampah Masuk</h2>
-            @if(session('success'))
-                <span class="text-xs bg-green-100 text-green-800 font-bold px-3 py-1 rounded-lg">
-                    {{ session('success') }}
-                </span>
-            @endif
-        </div>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-bold text-primary">Daftar Transaksi Sampah Masuk</h2>
+                @if(session('success'))
+                    <span class="text-xs bg-green-100 text-green-800 font-bold px-3 py-1 rounded-lg">
+                        {{ session('success') }}
+                    </span>
+                @endif
+            </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm text-left text-gray-500">
-                <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b">
-                    <tr>
-                        <th scope="col" class="px-6 py-3 font-bold">Pengirim</th>
-                        <th scope="col" class="px-6 py-3 font-bold">Nama Sampah</th>
-                        <th scope="col" class="px-6 py-3 font-bold">Jenis Sampah</th>
-                        <th scope="col" class="px-6 py-3 font-bold">Berat</th>
-                        <th scope="col" class="px-6 py-3 font-bold">Estimasi Bayar</th>
-                        <th scope="col" class="px-6 py-3 font-bold text-center">Informasi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($setoranMasuk as $sm)
-                    <tr class="bg-white border-b hover:bg-gray-50 transition">
-                        <td class="px-6 py-4 font-semibold text-gray-800">
-                            {{ $sm->user->username ?? 'Eco User' }}
-                        </td>
-                        <td class="px-6 py-4 text-gray-600">{{ $sm->nama }}</td>
-                        <td class="px-6 py-4">
-                            @if($sm->jenis == 'plastik')
-                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Plastik</span>
-                            @elseif($sm->jenis == 'kertas')
-                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Kertas</span>
-                            @else
-                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Logam</span>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4 font-bold text-gray-700">{{ $sm->berat }} Kg</td>
-                        <td class="px-6 py-4 font-bold text-primary"> {{ number_format($sm->harga, 0, ',', '.') }}</td>
-                        
-                        <td class="px-6 py-4 text-center">
-                            <a href="{{ route('pengepul.setoran.detail', $sm->id) }}" class="inline-flex items-center gap-1 bg-primary/10 hover:bg-primary/20 text-primary font-bold text-xs px-3 py-1.5 rounded-lg transition">
-                                <i class="fas fa-info-circle"></i> Detail
-                            </a>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="6" class="text-center py-10 text-gray-400 font-medium">
-                            📦 Belum ada pengajuan setoran sampah masuk yang perlu diproses.
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 font-bold">Pengirim</th>
+                            <th scope="col" class="px-6 py-3 font-bold">Nama Sampah</th>
+                            <th scope="col" class="px-6 py-3 font-bold">Jenis Sampah</th>
+                            <th scope="col" class="px-6 py-3 font-bold">Berat</th>
+                            <th scope="col" class="px-6 py-3 font-bold">Estimasi Bayar</th>
+                            <th scope="col" class="px-6 py-3 font-bold text-center">Informasi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($setoranMasuk as $sm)
+                        <tr class="bg-white border-b hover:bg-gray-50 transition">
+                            <td class="px-6 py-4 font-semibold text-gray-800">
+                                {{ $sm->user->username ?? 'Eco User' }}
+                            </td>
+                            <td class="px-6 py-4 text-gray-600">{{ $sm->nama }}</td>
+                            <td class="px-6 py-4">
+                                @if($sm->jenis == 'plastik')
+                                    <span class="px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Plastik</span>
+                                @elseif($sm->jenis == 'kertas')
+                                    <span class="px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Kertas</span>
+                                @else
+                                    <span class="px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Logam</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 font-bold text-gray-700">{{ $sm->berat }} Kg</td>
+                            <td class="px-6 py-4 font-bold text-primary">Rp {{ number_format($sm->harga, 0, ',', '.') }}</td>
+                            
+                            <td class="px-6 py-4 text-center">
+                                <a href="{{ route('pengepul.setoran.detail', $sm->id) }}" class="inline-flex items-center gap-1 bg-primary/10 hover:bg-primary/20 text-primary font-bold text-xs px-3 py-1.5 rounded-lg transition">
+                                    <i class="fas fa-info-circle"></i> Detail
+                                </a>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="6" class="text-center py-10 text-gray-400 font-medium">
+                                📦 Belum ada pengajuan setoran sampah masuk yang perlu diproses.
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <script>
+        // 1. Inisialisasi Bar Chart (Tren Penjemputan)
+        const ctxBar = document.getElementById('pickupChart').getContext('2d');
+        const pickupChart = new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: JSON.parse('{!! json_encode($chartLabels ?? []) !!}'),
+                datasets: [{
+                    label: 'Jumlah Transaksi',
+                    data: JSON.parse('{!! json_encode($chartData ?? []) !!}'),
+                    backgroundColor: '#709867',
+                    hoverBackgroundColor: '#3D5524',
+                    borderRadius: 8,
+                    borderSkipped: false,
+                    barThickness: 24
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' }, color: '#9ca3af' } },
+                    y: { grid: { color: '#f3f4f6' }, border: { dash: [5, 5] }, ticks: { stepSize: 1, font: { family: 'Plus Jakarta Sans', size: 11 }, color: '#9ca3af' } }
+                }
+            }
+        });
+
+        // 2. Inisialisasi Pie Chart Jenis Sampah Terintegrasi
+        const ctxPie = document.getElementById('categoryLineChart').getContext('2d');
+        const categoryPieChart = new Chart(ctxPie, {
+            type: 'pie', // Diubah menjadi pie
+            data: {
+                labels: JSON.parse('{!! json_encode($kategoriLabels ?? ["plastik", "kertas", "logam"]) !!}').map(w => w.charAt(0).toUpperCase() + w.slice(1)),
+                datasets: [{
+                    label: 'Total Berat (Kg)',
+                    data: JSON.parse('{!! json_encode($kategoriData ?? [0,0,0]) !!}'),
+                    // 🎨 Variasi warna tema alam & material sesuai identitas Trashify
+                    backgroundColor: [
+                        '#3D5524', // Hijau Tua Utama (Plastik)
+                        '#709867', // Hijau Daun GradStart (Kertas)
+                        '#9ca3af'  // Abu-abu Logam Muted (Logam)
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#ffffff', // Garis pembatas putih antar irisan agar clean
+                    hoverOffset: 12 // Efek pop-out melayang yang sedikit membesar saat kursor menyorot irisan pie
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true, // Aktifkan kembali legenda khusus pie chart
+                        position: 'bottom', // Letakkan petunjuk warna di bagian bawah chart
+                        labels: {
+                            font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' },
+                            boxWidth: 12,
+                            padding: 15
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#3D5524',
+                        titleFont: { family: 'Plus Jakarta Sans', size: 11, weight: 'bold' },
+                        bodyFont: { family: 'Plus Jakarta Sans', size: 12 },
+                        padding: 10,
+                        displayColors: true,
+                        callbacks: {
+                            label: function(context) {
+                                return ` ${context.label}: ${context.raw} Kg`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Script Asinkron Toggle Status Operasional Buka/Tutup Toko
         document.getElementById('toggleToko').addEventListener('change', function() {
             let status = this.checked ? 1 : 0;
 
@@ -187,9 +344,7 @@
                 body: JSON.stringify({ is_buka: status })
             })
             .then(res => {
-                if (!res.ok) {
-                    throw new Error('HTTP error ' + res.status);
-                }
+                if (!res.ok) throw new Error('HTTP error ' + res.status);
                 return res.json();
             })
             .then(data => {
@@ -210,7 +365,7 @@
             })
             .catch(err => {
                 console.error(err);
-                alert("Terjadi gangguan jaringan atau sesi Anda telah berakhir. Silakan refresh halaman.");
+                alert("Terjadi gangguan jaringan. Silakan refresh halaman.");
             });
         });
     </script>

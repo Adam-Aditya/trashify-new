@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <script>
         tailwind.config = {
@@ -90,19 +91,96 @@
         </header>
 
         <div class="bg-gradient-to-r from-gradStart to-gradEnd text-white p-6 rounded-2xl shadow-lg mb-6">
-            <h2 class="text-xl font-bold">Circular Milestone</h2>
-            <p class="text-white/90 text-sm mt-1">Kamu sudah berkontribusi dalam pengelolaan sampah 🎉</p>
+            <h2 class="text-xl font-bold">Ringkasan Transaksi</h2>
+            <p class="text-white/90 text-sm mt-1">Pantau kontribusi aktivitas penyetoran sampah dan tabungan poin digital Anda 📊</p>
 
-            <div class="flex gap-4 mt-4">
-                <div class="bg-primary/20 backdrop-blur-sm p-4 rounded-xl min-w-[120px]">
-                    <p class="text-xs text-white/80">Total Sampah</p>
-                    <h3 class="text-xl font-bold mt-1">12.4 Kg</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                <div class="bg-primary/20 backdrop-blur-sm p-4 rounded-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center gap-2 text-green-100 opacity-90 mb-1">
+                            <i class="fas fa-weight-hanging text-sm"></i>
+                            <p class="text-xs font-semibold uppercase tracking-wider">Sampah Disetor</p>
+                        </div>
+                        <h3 class="text-2xl font-black mt-1">
+                            {{ number_format($userTotalSampah ?? 0, 1, ',', '.') }} 
+                            <span class="text-sm font-normal text-white/80">Kg</span>
+                        </h3>
+                    </div>
                 </div>
-                <div class="bg-primary/20 backdrop-blur-sm p-4 rounded-xl min-w-[120px]">
-                    <p class="text-xs text-white/80">Efisiensi</p>
-                    <h3 class="text-xl font-bold mt-1">+14%</h3>
+                
+                <div class="bg-primary/20 backdrop-blur-sm p-4 rounded-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center gap-2 text-green-100 opacity-90 mb-1">
+                            <i class="fas fa-coins text-sm"></i>
+                            <p class="text-xs font-semibold uppercase tracking-wider">Pendapatan Poin</p>
+                        </div>
+                        <h3 class="text-2xl font-black mt-1">
+                            <span class="text-sm font-bold text-white/80">Pts</span> 
+                            {{ number_format($userTotalPoin ?? 0, 0, ',', '.') }}
+                        </h3>
+                    </div>
+                </div>
+
+                <div class="bg-primary/20 backdrop-blur-sm p-4 rounded-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center gap-2 text-green-100 opacity-90 mb-1">
+                            <i class="fas fa-receipt text-sm"></i>
+                            <p class="text-xs font-semibold uppercase tracking-wider">Total Transaksi</p>
+                        </div>
+                        <h3 class="text-2xl font-black mt-1">
+                            {{ $userTotalTransaksi ?? 0 }} 
+                            <span class="text-sm font-normal text-white/80">Sesi</span>
+                        </h3>
+                    </div>
+                </div>
+
+                <div class="bg-primary/20 backdrop-blur-sm p-4 rounded-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center gap-2 text-green-100 opacity-90 mb-1">
+                            <i class="fas fa-check-circle text-sm"></i>
+                            <p class="text-xs font-semibold uppercase tracking-wider">Disetujui</p>
+                        </div>
+                        <h3 class="text-2xl font-black mt-1 text-white">
+                            {{ $userTransaksiDisetujui ?? 0 }} 
+                            <span class="text-sm font-normal text-white/80">Sukses</span>
+                        </h3>
+                    </div>
                 </div>
             </div>
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-6 mb-6">
+            
+            <div class="w-full lg:w-2/4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 class="font-bold text-primary text-lg flex items-center gap-2">
+                            <i class="fas fa-chart-bar text-gradStart"></i> Grafik Pendapatan Poin Harian
+                        </h3>
+                        <p class="text-gray-400 text-xs mt-0.5">Pertumbuhan tabungan perolehan poin dari transaksi sukses.</p>
+                    </div>
+                    <span class="text-xs font-bold px-3 py-1 bg-[#e9f0e4] text-primary rounded-lg">Poin (Pts)</span>
+                </div>
+                <div class="w-full relative h-[260px]">
+                    <canvas id="userPoinChart"></canvas>
+                </div>
+            </div>
+
+            <div class="w-full lg:w-2/4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 class="font-bold text-primary text-lg flex items-center gap-2">
+                            <i class="fas fa-dumpster text-gradEnd"></i> Sampah Disetor Harian
+                        </h3>
+                        <p class="text-gray-400 text-xs mt-0.5">Akumulasi bobot muatan kontribusi harian Anda.</p>
+                    </div>
+                    <span class="text-xs font-bold px-3 py-1 bg-gray-100 text-gray-600 rounded-lg">Massa (Kg)</span>
+                </div>
+                <div class="w-full relative h-[260px]">
+                    <canvas id="userBeratChart"></canvas>
+                </div>
+            </div>
+
         </div>
 
         <div class="mb-6">
@@ -167,5 +245,80 @@
 
     </div>
 
+    <script>
+        const chartLabelsShared = JSON.parse('{!! json_encode($userChartLabels ?? []) !!}');
+
+        // 1. Render Bar Chart Pendapatan Poin (Lebar 2/4)
+        const ctxPoin = document.getElementById('userPoinChart').getContext('2d');
+        new Chart(ctxPoin, {
+            type: 'bar',
+            data: {
+                labels: chartLabelsShared,
+                datasets: [{
+                    label: 'Poin Masuk',
+                    data: JSON.parse('{!! json_encode($userChartPoin ?? []) !!}'),
+                    backgroundColor: '#709867', // gradStart
+                    hoverBackgroundColor: '#3D5524', // primary
+                    borderRadius: 6,
+                    borderSkipped: false,
+                    barThickness: 24
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#3D5524',
+                        titleFont: { family: 'Plus Jakarta Sans', size: 12, weight: 'bold' },
+                        bodyFont: { family: 'Plus Jakarta Sans', size: 12 },
+                        displayColors: false,
+                        callbacks: { label: function(c) { return ` + ${c.raw.toLocaleString('id-ID')} Pts`; } }
+                    }
+                },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' }, color: '#9ca3af' } },
+                    y: { grid: { color: '#f3f4f6' }, border: { dash: [5, 5] }, ticks: { font: { family: 'Plus Jakarta Sans', size: 11 }, color: '#9ca3af' } }
+                }
+            }
+        });
+
+        // 2. Render Bar Chart Tonase Berat Sampah (Lebar 2/4)
+        const ctxBerat = document.getElementById('userBeratChart').getContext('2d');
+        new Chart(ctxBerat, {
+            type: 'bar',
+            data: {
+                labels: chartLabelsShared,
+                datasets: [{
+                    label: 'Massa Sampah',
+                    data: JSON.parse('{!! json_encode($userChartBerat ?? []) !!}'),
+                    backgroundColor: '#9BB863', // gradEnd
+                    hoverBackgroundColor: '#3D5524',
+                    borderRadius: 6,
+                    borderSkipped: false,
+                    barThickness: 24 // 🛠️ OPTIMASI: Ketebalan ditingkatkan dari 16 ke 24 agar seimbang secara simetris
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#3D5524',
+                        titleFont: { family: 'Plus Jakarta Sans', size: 11, weight: 'bold' },
+                        bodyFont: { family: 'Plus Jakarta Sans', size: 12 },
+                        displayColors: false,
+                        callbacks: { label: function(c) { return ` ${c.raw} Kg`; } }
+                    }
+                },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' }, color: '#9ca3af' } }, // 🛠️ OPTIMASI: Ukuran teks disamakan dengan chart kiri
+                    y: { grid: { color: '#f3f4f6' }, border: { dash: [5, 5] }, ticks: { font: { family: 'Plus Jakarta Sans', size: 11 }, color: '#9ca3af' } } // 🛠️ OPTIMASI: Ukuran teks disamakan dengan chart kiri
+                }
+            }
+        });
+    </script>
 </body>
 </html>

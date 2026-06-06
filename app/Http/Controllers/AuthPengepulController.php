@@ -80,33 +80,104 @@ class AuthPengepulController extends Controller
 
     public function showDashboard() 
     {
-        // 1. Ambil ID Pengepul yang sedang login aktif
         $pengepulId = Auth::guard('pengepul')->id();
 
-        // 2. Ambil data setoran berstatus 'pending' DAN 'diterima' (Dalam Penjemputan)
+        // 1. Antrean tabel depan
         $setoranMasuk = \App\Models\SetorSampah::with('user')
                         ->where('pengepul_id', $pengepulId)
-                        ->whereIn('status', ['pending', 'diterima']) // Menggunakan whereIn agar status penjemputan tidak hilang dari dashboard
+                        ->whereIn('status', ['pending', 'diterima'])
                         ->latest()
                         ->get();
 
-        // 3. Pastikan variabel 'setoranMasuk' dikirim ke view dashboard pengepul
-        return view('dashboard-pengepul', compact('setoranMasuk'));
+        // 2. Metrik Ringkasan
+        $totalBerat = \App\Models\SetorSampah::where('pengepul_id', $pengepulId)
+                        ->whereIn('status', ['diterima', 'selesai_transaksi'])
+                        ->sum('berat');
+
+        $totalPenjemputan = \App\Models\SetorSampah::where('pengepul_id', $pengepulId)
+                        ->whereIn('status', ['selesai_transaksi', 'ditolak'])
+                        ->count();
+
+        $totalPoinKeluar = \App\Models\SetorSampah::where('pengepul_id', $pengepulId)
+                        ->where('status', 'selesai_transaksi')
+                        ->sum('harga');
+
+        // 3. Data Bar Chart (Tren Mingguan)
+        $trenHarian = \App\Models\SetorSampah::where('pengepul_id', $pengepulId)
+                        ->whereIn('status', ['selesai_transaksi', 'ditolak'])
+                        ->selectRaw("DATE_FORMAT(updated_at, '%d %b') as tanggal, COUNT(*) as jumlah")
+                        ->groupBy('tanggal')
+                        ->orderBy(DB::raw("MIN(updated_at)"), 'asc')
+                        ->take(7)
+                        ->get();
+
+        $chartLabels = $trenHarian->pluck('tanggal')->toArray();
+        $chartData = $trenHarian->pluck('jumlah')->toArray();
+
+        // 4. Hitung Total Akumulasi Berdasarkan Jenis Sampah (Untuk Pie Chart 1/3)
+        $jenisSampahData = \App\Models\SetorSampah::where('pengepul_id', $pengepulId)
+                        ->where('status', 'selesai_transaksi')
+                        ->selectRaw("jenis, SUM(berat) as total_berat")
+                        ->groupBy('jenis')
+                        ->get()
+                        ->pluck('total_berat', 'jenis')
+                        ->toArray();
+
+        $kategoriLabels = ['plastik', 'kertas', 'logam'];
+        $kategoriData = [
+            (float) ($jenisSampahData['plastik'] ?? 0),
+            (float) ($jenisSampahData['kertas'] ?? 0),
+            (float) ($jenisSampahData['logam'] ?? 0)
+        ];
+
+        // 5. Data Line Chart Finansial (Nominal Poin Keluar)
+        $trenPoinSelesai = \App\Models\SetorSampah::where('pengepul_id', $pengepulId)
+                        ->where('status', 'selesai_transaksi')
+                        ->orderBy('updated_at', 'asc')
+                        ->take(7)
+                        ->get();
+
+        $poinLabels = $trenPoinSelesai->map(function($item, $key) { return 'Trx ' . ($key + 1); })->toArray();
+        $poinData = $trenPoinSelesai->pluck('harga')->map(function($value) { return (int) $value; })->toArray();
+
+        return view('dashboard-pengepul', compact(
+            'setoranMasuk', 
+            'totalBerat', 
+            'totalPenjemputan', 
+            'totalPoinKeluar',
+            'chartLabels',
+            'chartData',
+            'kategoriLabels',
+            'kategoriData',
+            'poinLabels',
+            'poinData'
+        ));
     }
 
-    public function toggleStatus(Request $request) {
-        $request->validate([
-            'is_buka' => 'required|in:0,1'
-        ]);
+    /**
+     * 🛠️ KODE INTEGRASI: Mengubah status operasional lapak buka/tutup via Fetch API JSON
+     */
+    public function toggleStatus(Request $request)
+    {
+        // 1. Ambil data pengepul yang sedang login aktif lewat guard pengepul
+        $pengepulModel = Auth::guard('pengepul')->user();
 
-        /** @var \App\Models\Pengepul $pengepul */
-        $pengepul = Auth::guard('pengepul')->user();
+        if (!$pengepulModel) {
+            return response()->json(['status' => 'error', 'message' => 'Sesi Anda telah berakhir.'], 401);
+        }
+
+        // 2. Ambil instance model murni dari database agar fungsi save aman
+        $pengepul = Pengepul::find($pengepulModel->id);
         
-        $pengepul->update([
-            'is_buka' => $request->is_buka
-        ]);
+        // 3. Tangkap status is_buka (1 atau 0) dari kiriman JavaScript body
+        $pengepul->is_buka = $request->input('is_buka');
+        $pengepul->save();
 
-        return response()->json(['status' => 'success']);
+        // 4. Kirim respon balik berformat JSON murni agar dipahami oleh skrip AJAX (.then)
+        return response()->json([
+            'status' => 'success',
+            'is_buka' => (int) $pengepul->is_buka
+        ]);
     }
 
     public function showProfil() {
@@ -124,7 +195,6 @@ class AuthPengepulController extends Controller
         $field = $request->field;
         $value = $request->value;
 
-        // Validasi unik jika mengubah username/email
         if ($field === 'username' && $value !== $pengepul->username) {
             $request->validate(['value' => 'unique:pengepuls,username']);
         }
@@ -136,7 +206,6 @@ class AuthPengepulController extends Controller
             $value = Hash::make($value);
         }
 
-        // Eksekusi update ke database
         $pengepul->update([
             $field => $value
         ]);
@@ -144,13 +213,11 @@ class AuthPengepulController extends Controller
         return redirect()->route('pengepul.profil')->with('success', 'Informasi lapak berhasil diperbarui!');
     }
 
-    // Fungsi untuk menampilkan halaman form top up poin
     public function showTopupForm() 
     {
         return view('topup-poin');
     }
 
-    // Fungsi untuk memproses data saldo top up masuk
     public function prosesTopup(Request $request)
     {
         $request->validate([
@@ -159,21 +226,14 @@ class AuthPengepulController extends Controller
             'nominal'        => 'required|numeric|min:50000'
         ]);
 
-        // 1. Ambil data pengepul yang sedang login
         $userLogin = Auth::guard('pengepul')->user();
         $jumlahTopup = (int) $request->nominal;
 
-        // 2. AMBIL MODEL ASLI DARI DATABASE (Agar bisa di-save tanpa eror)
-        $pengepul = \App\Models\Pengepul::find($userLogin->id);
-
-        // 3. Hitung dan masukkan poin baru
+        $pengepul = Pengepul::find($userLogin->id);
         $pengepul->poin = ($pengepul->poin ?? 0) + $jumlahTopup;
-
-        // 4. Simpan ke Database
         $pengepul->save(); 
 
-        // 5. Kembali ke halaman dengan notifikasi sukses
-        $poinFormat = call_user_func('number_format', $jumlahTopup, 0, ',', '.');
+        $poinFormat = number_format($jumlahTopup, 0, ',', '.');
 
         return redirect()->back()->with(
             'success', 
@@ -181,9 +241,6 @@ class AuthPengepulController extends Controller
         );
     }
 
-    /**
-     * Fungsi resmi untuk mengeluarkan sesi login Pengepul
-     */
     public function logout(Request $request) 
     {
         Auth::guard('pengepul')->logout();
@@ -191,7 +248,19 @@ class AuthPengepulController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        // Alihkan kembali ke halaman utama login/register pengepul
         return redirect()->route('landing')->with('success', 'Anda telah berhasil keluar dari akun.');
+    }
+
+    public function showRiwayat()
+    {
+        $pengepulId = Auth::guard('pengepul')->id();
+
+        $riwayatTransaksi = \App\Models\SetorSampah::with('user')
+                            ->where('pengepul_id', $pengepulId)
+                            ->whereIn('status', ['selesai_transaksi', 'ditolak'])
+                            ->latest()
+                            ->get();
+
+        return view('riwayat-pengepul', compact('riwayatTransaksi'));
     }
 }

@@ -163,4 +163,72 @@ class AuthPenggunaController extends Controller
 
         return redirect()->route('dashboard')->with('success', 'Penukaran poin sebesar Rp ' . number_format($nominal, 0, ',', '.') . ' berhasil!');
     }
+    public function showDashboard()
+    {
+        $user = Auth::user();
+        $userId = $user->id;
+
+        // 1. Koordinat lokasi user
+        $userLoc = explode(',', $user->location ?? '0,0');
+        $userLat = isset($userLoc[0]) ? (float)$userLoc[0] : 0;
+        $userLng = isset($userLoc[1]) ? (float)$userLoc[1] : 0;
+
+        // 2. Ambil data pengepul terdekat yang BUKA (Rumus Haversine)
+        $daftarToko = DB::table('pengepuls')
+            ->where('is_buka', 1)
+            ->select('*')
+            ->selectRaw(
+                "( 6371 * acos( cos( radians(?) ) * cos( radians( SUBSTRING_INDEX(location, ',', 1) ) ) * cos( radians( SUBSTRING_INDEX(location, ',', -1) ) - radians(?) ) + sin( radians(?) ) * sin( radians( SUBSTRING_INDEX(location, ',', 1) ) ) ) ) AS jarak", 
+                [$userLat, $userLng, $userLat]
+            )
+            ->orderBy('jarak', 'asc')
+            ->get();
+
+        // 3. HITUNG METRIK RINGKASAN TRANSAKSI USER DARI DATABASE
+        $userTotalSampah = DB::table('setor_sampahs')
+            ->where('user_id', $userId)
+            ->where('status', 'selesai_transaksi')
+            ->sum('berat');
+
+        $userTotalPoin = DB::table('setor_sampahs')
+            ->where('user_id', $userId)
+            ->where('status', 'selesai_transaksi')
+            ->sum('harga');
+
+        $userTotalTransaksi = DB::table('setor_sampahs')
+            ->where('user_id', $userId)
+            ->count();
+
+        $userTransaksiDisetujui = DB::table('setor_sampahs')
+            ->where('user_id', $userId)
+            ->where('status', 'selesai_transaksi')
+            ->count();
+
+        // 4. DATA BARU: Tarik data tren kontribusi harian selama 7 hari terakhir
+        $userTrenHarian = DB::table('setor_sampahs')
+            ->where('user_id', $userId)
+            ->where('status', 'selesai_transaksi')
+            ->selectRaw("DATE_FORMAT(updated_at, '%d %b') as tanggal, SUM(harga) as total_poin, SUM(berat) as total_berat")
+            ->groupBy('tanggal')
+            ->orderBy(DB::raw("MIN(updated_at)"), 'asc')
+            ->take(7)
+            ->get();
+
+        // Ekstrak data tren ke bentuk array untuk Chart.js
+        $userChartLabels = $userTrenHarian->pluck('tanggal')->toArray();
+        $userChartPoin = $userTrenHarian->pluck('total_poin')->map(function($item) { return (int)$item; })->toArray();
+        $userChartBerat = $userTrenHarian->pluck('total_berat')->map(function($item) { return (float)$item; })->toArray();
+
+        // Kirim semua variabel ke view dashboard pengguna
+        return view('dashboard', compact(
+            'daftarToko', 
+            'userTotalSampah', 
+            'userTotalPoin', 
+            'userTotalTransaksi', 
+            'userTransaksiDisetujui',
+            'userChartLabels', 
+            'userChartPoin',   
+            'userChartBerat'   
+        ));
+    }
 }

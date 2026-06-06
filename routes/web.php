@@ -31,27 +31,7 @@ Route::post('/proses-login', [AuthPenggunaController::class, 'login'])->name('lo
 Route::middleware(['auth'])->group(function () {
     
     //  KODE BARU (MENGHITUNG JARAK DAN MENAMPILKAN PENGEPUL YANG BUKA)
-    Route::get('/dashboard', function () {
-        // 1. Ambil data koordinat lokasi user yang sedang login ("lat,lng")
-        $user = Auth::user();
-        $userLoc = explode(',', $user->location ?? '0,0');
-        $userLat = isset($userLoc[0]) ? (float)$userLoc[0] : 0;
-        $userLng = isset($userLoc[1]) ? (float)$userLoc[1] : 0;
-
-        // 2. Ambil data pengepul yang berstatus BUKA (is_buka = 1) menggunakan rumus Haversine
-        $daftarToko = DB::table('pengepuls')
-            ->where('is_buka', 1)
-            ->select('*')
-            ->selectRaw(
-                "( 6371 * acos( cos( radians(?) ) * cos( radians( SUBSTRING_INDEX(location, ',', 1) ) ) * cos( radians( SUBSTRING_INDEX(location, ',', -1) ) - radians(?) ) + sin( radians(?) ) * sin( radians( SUBSTRING_INDEX(location, ',', 1) ) ) ) ) AS jarak", 
-                [$userLat, $userLng, $userLat]
-            )
-            ->orderBy('jarak', 'asc') // Urutkan dari yang jaraknya paling dekat
-            ->get();
-
-        // Kirim variabel $daftarToko ke view dashboard.blade.php yang baru
-        return view('dashboard', compact('daftarToko'));
-    })->name('dashboard');
+    Route::get('/dashboard', [AuthPenggunaController::class, 'showDashboard'])->name('dashboard');
 
     // Profil User
     Route::get('/profil', [AuthPenggunaController::class, 'showProfil'])->name('profil.show');
@@ -102,6 +82,9 @@ Route::middleware(['auth:pengepul'])->group(function () {
 
     Route::get('/mitra/setoran/{id}/penjemputan', [SetorSampahController::class, 'showPenjemputan'])->name('pengepul.setoran.penjemputan');
     Route::post('/mitra/setoran/{id}/selesai', [SetorSampahController::class, 'selesaiTransaksi'])->name('pengepul.setoran.selesai');
+
+    // History
+    Route::get('/mitra/riwayat', [AuthPengepulController::class, 'showRiwayat'])->name('pengepul.riwayat');
     
     // Profil Lapak
     Route::get('/mitra/profil', [AuthPengepulController::class, 'showProfil'])->name('pengepul.profil');

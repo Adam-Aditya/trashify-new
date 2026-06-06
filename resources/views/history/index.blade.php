@@ -85,6 +85,7 @@
                 <table class="w-full text-sm text-left text-gray-500">
                     <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b">
                         <tr>
+                            <th scope="col" class="px-6 py-4 font-bold">Tanggal</th>
                             <th scope="col" class="px-6 py-4 font-bold">Nama Sampah</th>
                             <th scope="col" class="px-6 py-4 font-bold">Jenis</th>
                             <th scope="col" class="px-6 py-4 font-bold">Berat</th>
@@ -96,6 +97,9 @@
                     <tbody>
                         @forelse($data as $d)
                         <tr class="bg-white border-b hover:bg-gray-50 transition">
+                            <td class="px-6 py-4 font-medium text-gray-400 text-xs whitespace-nowrap">
+                                {{ $d->created_at ? $d->created_at->timezone('Asia/Jakarta')->translatedFormat('d M Y, H:i') . ' WIB' : '-' }}
+                            </td>
                             <td class="px-6 py-4 font-semibold text-gray-800">{{ $d->nama }}</td>
                             <td class="px-6 py-4">
                                 @if(strtolower($d->jenis) == 'plastik')
@@ -111,7 +115,6 @@
                             <td class="px-6 py-4 font-bold text-gray-700">{{ $d->berat }} Kg</td>
                             <td class="px-6 py-4 font-bold text-primary">{{ number_format($d->harga, 0, ',', '.') }}</td>
                             
-                            <!-- 🛠️ UPDATE DI SINI: Mendukung status selesai_transaksi -->
                             <td class="px-6 py-4 text-center">
                                 @if($d->status == 'pending')
                                     <span class="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-800">
@@ -134,7 +137,6 @@
 
                             <td class="px-6 py-4">
                                 <div class="flex justify-center gap-4">
-                                    <!-- Aksi Edit dikunci jika status bukan pending -->
                                     @if($d->status == 'pending')
                                         <a href="{{ route('history.edit', $d->id) }}" class="text-blue-600 hover:text-blue-800 transition transform hover:scale-110 text-base" title="Edit Data">
                                             <i class="fas fa-edit"></i>
@@ -157,7 +159,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="text-center py-10 text-gray-400 font-medium">
+                            <td colspan="7" class="text-center py-10 text-gray-400 font-medium">
                                 📦 Belum ada riwayat transaksi sampah.
                             </td>
                         </tr>
