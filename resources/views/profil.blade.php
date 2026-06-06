@@ -32,7 +32,6 @@
 <body class="bg-[#f5f7f6] flex font-jakarta">
 
 <aside class="w-[280px] bg-primary text-white h-screen fixed p-10 flex flex-col justify-between shadow-xl">
-    
     <div>
         <div class="flex items-center gap-3 mb-10">
             <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center font-bold text-lg text-white border border-white/30">
@@ -48,15 +47,12 @@
             <a href="{{ route('dashboard') }}" class="px-5 py-3 rounded-xl flex items-center gap-3 text-green-100 hover:bg-white/10 transition">
                 <i class="fas fa-th-large"></i> Dashboard
             </a>
-
             <a href="{{ route('history.index') }}" class="px-5 py-3 rounded-xl flex items-center gap-3 text-green-100 hover:bg-white/10 transition">
                 <i class="fas fa-history"></i> Riwayat
             </a>
-
             <a href="{{ route('poin.tukar') }}" class="px-5 py-3 rounded-xl flex items-center gap-3 text-green-100 hover:bg-white/10 transition">
                 <i class="fas fa-wallet"></i> Wallet
             </a>
-
             <a href="{{ route('profil.show') }}" class="bg-white/20 px-5 py-3 rounded-xl flex items-center gap-3 font-semibold transition">
                 <i class="fas fa-user"></i> Profil
             </a>
@@ -67,11 +63,10 @@
         <form action="{{ route('logout') }}" method="POST">
             @csrf
             <button type="submit" class="w-full text-left px-5 py-3 rounded-xl text-red-200 hover:bg-red-900/30 hover:text-white transition font-semibold">
-                <i class="fas fa-sign-out-alt mr-2"></i> Log out
+                <i class="fas fa-sign-out-alt mr-2"></i> Keluar
             </button>
         </form>
     </div>
-
 </aside>
 
 <main class="ml-[280px] flex-1 p-10">
@@ -104,7 +99,6 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
 
         <div class="col-span-2 bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-
             <div class="flex justify-between mb-6">
                 <h2 class="font-bold text-xl text-primary">Personal Information</h2>
             </div>
@@ -148,21 +142,30 @@
             </div>
         </div>
 
-        <div class="bg-primary text-white p-8 rounded-2xl flex flex-col justify-between shadow-lg">
+        <div class="bg-primary text-white p-8 rounded-2xl flex flex-col justify-between shadow-lg sticky top-10">
             <div>
-                <span class="bg-[#10b981] px-3 py-1 rounded-full text-xs font-bold">
-                    ELITE STATUS
-                </span>
-
-                <h3 class="text-xl font-bold mt-4">Curator Impact</h3>
+                <div class="flex justify-between items-center">
+                    <span class="bg-[#10b981] px-3 py-1 rounded-full text-xs font-bold tracking-wide">
+                        SALDO AKTIF
+                    </span>
+                    <i class="fas fa-wallet text-xl opacity-80"></i>
+                </div>
+                
+                <h3 class="text-xl font-bold mt-4">Poin Anda</h3>
                 <p class="text-sm opacity-80 mt-1 leading-relaxed">
-                    Kamu termasuk top user dalam kontribusi lingkungan.
+                    Saldo poin yang Anda peroleh dari hasil penyetoran sampah dan dapat ditukarkan menjadi uang digital.
                 </p>
             </div>
 
-            <div class="mt-8">
-                <p class="text-5xl font-extrabold tracking-tight">4,820</p>
-                <small class="uppercase text-xs text-white/70 tracking-widest block mt-1">Total Points</small>
+            <div class="mt-12">
+                <p class="text-5xl font-extrabold tracking-tight">
+                    {{ number_format($user->poin ?? 0, 0, ',', '.') }}
+                    <span class="text-xl font-normal ml-1">Poin</span>
+                </p>
+                
+                <small class="uppercase text-xs text-white/70 tracking-widest block mt-2">
+                    Setara Finansial: Rp {{ number_format($user->poin ?? 0, 0, ',', '.') }}
+                </small>
             </div>
         </div>
 
@@ -230,6 +233,7 @@ function saveData() {
 
     document.getElementById("updateForm").submit();
 }
+
 function getCityLocation() {
     const locationText = document.getElementById("locationText");
     const btnText = document.getElementById("locationBtnText");
@@ -238,7 +242,6 @@ function getCityLocation() {
         return alert("Browser Anda tidak mendukung deteksi lokasi otomatis.");
     }
 
-    // Set UI Loading
     btnText.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Meminta Akses GPS...`;
     locationText.innerText = "Menghubungkan ke satelit GPS...";
 
@@ -250,24 +253,20 @@ function getCityLocation() {
             locationText.innerText = "Menerjemahkan koordinat menjadi nama kota...";
             btnText.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Mencari Kota...`;
 
-            // REVERSE GEOCODING menggunakan OpenStreetMap Nominatim API
             fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
                 .then(response => response.json())
                 .then(data => {
                     const address = data.address;
                     let namaKota = address.city || address.regency || address.town || address.county || address.municipality || "Kota Tidak Terdeteksi";
 
-                    // Rapikan lokalisasi penamaan teks regional Indonesia
                     namaKota = namaKota.replace("Regency", "Kabupaten").trim();
 
                     locationText.innerText = `Terdeteksi: ${namaKota}`;
                     btnText.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Menyimpan...`;
 
-                    // Masukkan nilai parameter ke form tersembunyi (updateForm) milik Pengguna
                     document.getElementById("fieldInput").value = "location"; 
                     document.getElementById("valueInput").value = namaKota;
                     
-                    // Submit otomatis ke Controller Pengguna
                     document.getElementById("updateForm").submit();
                 })
                 .catch(err => {
@@ -278,7 +277,6 @@ function getCityLocation() {
                 });
         },
         function (error) {
-            // Fallback teks jika GPS dimatikan atau akses ditolak pengguna
             btnText.innerHTML = `<i class="fas fa-map-marker-alt"></i> Deteksi Kota Otomatis`;
             locationText.innerText = "{{ Auth::user()->location ?? 'Belum diatur' }}";
             

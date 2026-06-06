@@ -78,8 +78,20 @@ class AuthPengepulController extends Controller
         return redirect()->route('pengepul.dashboard')->with('success', 'Profil Toko Berhasil Disimpan!');
     }
 
-    public function showDashboard() {
-        return view('dashboard-pengepul');
+    public function showDashboard() 
+    {
+        // 1. Ambil ID Pengepul yang sedang login aktif
+        $pengepulId = Auth::guard('pengepul')->id();
+
+        // 2. Ambil data setoran berstatus 'pending' DAN 'diterima' (Dalam Penjemputan)
+        $setoranMasuk = \App\Models\SetorSampah::with('user')
+                        ->where('pengepul_id', $pengepulId)
+                        ->whereIn('status', ['pending', 'diterima']) // Menggunakan whereIn agar status penjemputan tidak hilang dari dashboard
+                        ->latest()
+                        ->get();
+
+        // 3. Pastikan variabel 'setoranMasuk' dikirim ke view dashboard pengepul
+        return view('dashboard-pengepul', compact('setoranMasuk'));
     }
 
     public function toggleStatus(Request $request) {
@@ -151,7 +163,7 @@ class AuthPengepulController extends Controller
         $userLogin = Auth::guard('pengepul')->user();
         $jumlahTopup = (int) $request->nominal;
 
-        // 2. 🛠️ AMBIL MODEL ASLI DARI DATABASE (Agar bisa di-save tanpa eror)
+        // 2. AMBIL MODEL ASLI DARI DATABASE (Agar bisa di-save tanpa eror)
         $pengepul = \App\Models\Pengepul::find($userLogin->id);
 
         // 3. Hitung dan masukkan poin baru
@@ -161,14 +173,16 @@ class AuthPengepulController extends Controller
         $pengepul->save(); 
 
         // 5. Kembali ke halaman dengan notifikasi sukses
+        $poinFormat = call_user_func('number_format', $jumlahTopup, 0, ',', '.');
+
         return redirect()->back()->with(
             'success', 
-            'Selamat! Top up saldo sebesar ' . number_format($jumlahTopup, 0, ',', '.') . ' Poin berhasil ditambahkan ke akun lapak Anda.'
+            'Selamat! Top up saldo sebesar ' . $poinFormat . ' Poin berhasil ditambahkan ke akun Anda.'
         );
     }
 
     /**
-     * 🛠️ TAMBAHAN BARU: Fungsi resmi untuk mengeluarkan sesi login Pengepul
+     * Fungsi resmi untuk mengeluarkan sesi login Pengepul
      */
     public function logout(Request $request) 
     {

@@ -43,7 +43,7 @@
             </div>
 
             <nav class="flex flex-col gap-2">
-                <a href="{{ route('pengepul.dashboard') }}" class="px-5 py-3 rounded-xl flex items-center gap-3 text-green-100 hover:bg-white/10 transition">
+                <a href="{{ route('pengepul.dashboard') }}" class="bg-white/20 px-5 py-3 rounded-xl flex items-center gap-3 font-semibold transition">
                     <i class="fas fa-th-large"></i> Dashboard
                 </a>
 
@@ -62,7 +62,7 @@
         </div>
 
         <div>
-            <form action="{{ route('logout') }}" method="POST">
+            <form action="{{ route('pengepul.logout') }}" method="POST">
                 @csrf
                 <button type="submit" class="w-full text-left px-5 py-3 rounded-xl text-red-200 hover:bg-red-900/30 hover:text-white transition font-semibold">
                     <i class="fas fa-sign-out-alt mr-2"></i> Keluar
@@ -75,11 +75,11 @@
 
         <header class="flex justify-between items-center mb-10">
             <h2 class="text-xl font-extrabold text-primary">
-                Dashboard Pengepul <span class="text-gray-400 font-normal text-sm">/ Mitra</span>
+                Dashboard Pengepul <span class="text-gray-400 font-normal text-sm">/ Beranda</span>
             </h2>
 
             <div class="bg-white flex items-center gap-3 rounded-full pl-4 pr-5 py-2 border border-gray-100 shadow-sm">
-                <div class="w-3 h-3 rounded-full id="statusDot" class="{{ Auth::guard('pengepul')->user()->is_buka ? 'bg-green-500' : 'bg-red-500' }}"></div>
+                <div id="statusDot" class="w-3 h-3 rounded-full {{ Auth::guard('pengepul')->user()->is_buka ? 'bg-green-500' : 'bg-red-500' }}"></div>
                 <span class="text-xs font-bold text-gray-700" id="statusText">
                     Toko: {{ Auth::guard('pengepul')->user()->is_buka ? 'BUKA' : 'TUTUP' }}
                 </span>
@@ -115,30 +115,61 @@
         </div>
 
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-            <h2 class="text-lg font-bold text-primary mb-4">Setoran Masuk Terbaru</h2>
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-bold text-primary">Daftar Transaksi Sampah Masuk</h2>
+            @if(session('success'))
+                <span class="text-xs bg-green-100 text-green-800 font-bold px-3 py-1 rounded-lg">
+                    {{ session('success') }}
+                </span>
+            @endif
+        </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm text-left text-gray-500">
-                    <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 font-bold">Pengirim</th>
-                            <th scope="col" class="px-6 py-3 font-bold">Jenis Sampah</th>
-                            <th scope="col" class="px-6 py-3 font-bold">Berat</th>
-                            <th scope="col" class="px-6 py-3 font-bold">Biaya Dibayar</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="bg-white border-b hover:bg-gray-50 transition">
-                            <td class="px-6 py-4 font-semibold text-gray-800">Adam Eco User</td>
-                            <td class="px-6 py-4">
-                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-primary/10 text-primary">logam</span>
-                            </td>
-                            <td class="px-6 py-4 font-bold text-gray-700">12.4 Kg</td>
-                            <td class="px-6 py-4 font-bold text-primary">Rp 74.400</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left text-gray-500">
+                <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 font-bold">Pengirim</th>
+                        <th scope="col" class="px-6 py-3 font-bold">Nama Sampah</th>
+                        <th scope="col" class="px-6 py-3 font-bold">Jenis Sampah</th>
+                        <th scope="col" class="px-6 py-3 font-bold">Berat</th>
+                        <th scope="col" class="px-6 py-3 font-bold">Estimasi Bayar</th>
+                        <th scope="col" class="px-6 py-3 font-bold text-center">Informasi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($setoranMasuk as $sm)
+                    <tr class="bg-white border-b hover:bg-gray-50 transition">
+                        <td class="px-6 py-4 font-semibold text-gray-800">
+                            {{ $sm->user->username ?? 'Eco User' }}
+                        </td>
+                        <td class="px-6 py-4 text-gray-600">{{ $sm->nama }}</td>
+                        <td class="px-6 py-4">
+                            @if($sm->jenis == 'plastik')
+                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Plastik</span>
+                            @elseif($sm->jenis == 'kertas')
+                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Kertas</span>
+                            @else
+                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Logam</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 font-bold text-gray-700">{{ $sm->berat }} Kg</td>
+                        <td class="px-6 py-4 font-bold text-primary"> {{ number_format($sm->harga, 0, ',', '.') }}</td>
+                        
+                        <td class="px-6 py-4 text-center">
+                            <a href="{{ route('pengepul.setoran.detail', $sm->id) }}" class="inline-flex items-center gap-1 bg-primary/10 hover:bg-primary/20 text-primary font-bold text-xs px-3 py-1.5 rounded-lg transition">
+                                <i class="fas fa-info-circle"></i> Detail
+                            </a>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="6" class="text-center py-10 text-gray-400 font-medium">
+                            📦 Belum ada pengajuan setoran sampah masuk yang perlu diproses.
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -146,7 +177,6 @@
         document.getElementById('toggleToko').addEventListener('change', function() {
             let status = this.checked ? 1 : 0;
 
-            // Ambil token CSRF langsung dari global objek bawaan Laravel
             fetch("{{ route('pengepul.toggle') }}", {
                 method: "POST",
                 headers: {

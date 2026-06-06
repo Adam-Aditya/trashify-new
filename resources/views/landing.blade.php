@@ -44,7 +44,7 @@
         </div>
 
         <div class="flex gap-3">
-            <a href="{{ route('login.user') }}"
+            <a href="{{ route('login') }}" 
             class="px-4 py-2 text-sm text-white/80 hover:bg-white/20 rounded-lg flex items-center">
                 Login
             </a>

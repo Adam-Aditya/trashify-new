@@ -34,13 +34,13 @@
 
     <div class="flex items-center gap-3 mb-6">
         <div class="w-10 h-10 rounded-xl bg-[#2d3f1a]/10 flex items-center justify-center text-[#2d3f1a] text-lg">
-            <i class="fas fa-recycle"></i>
+            <i class="fas fa-search-location"></i>
         </div>
         <h1 class="text-2xl font-extrabold text-[#2d3f1a]">Setor Sampah</h1>
     </div>
 
-    <form action="{{ url('/setor-sampah') }}" method="POST">
-        @csrf
+    {{-- 🛠️ PERBAIKAN: Method diubah ke GET untuk meneruskan data filter ke halaman list pengepul --}}
+    <form action="{{ route('setor.pilih-pengepul') }}" method="GET">
 
         <div class="mb-4">
             <label class="block mb-1 text-sm font-bold text-gray-600">Nama Sampah</label>
@@ -77,14 +77,15 @@
         </div>
 
         <div class="flex gap-3 text-sm font-semibold">
+            {{-- 🛠️ PERBAIKAN: Tombol diubah menjadi Cari Pengepul --}}
             <button type="submit" 
-                class="flex-1 bg-[#2d3f1a] text-white px-6 py-3.5 rounded-xl shadow-md transition text-center hover:opacity-90">
-                <i class="fas fa-save mr-1"></i> Simpan
+                class="flex-1 bg-[#2d3f1a] text-white px-6 py-3.5 rounded-xl shadow-md transition text-center hover:opacity-90 flex items-center justify-center gap-2">
+                <i class="fas fa-search"></i> Cari Pengepul
             </button>
 
             <a href="{{ route('dashboard') }}" 
                class="px-6 py-3.5 rounded-xl bg-gray-100 text-gray-400 hover:bg-gray-200 transition text-center flex items-center justify-center">
-               Batal
+                Batal
             </a>
         </div>
 
@@ -104,9 +105,7 @@
         if (jenis.value === 'logam') hargaPerKg = 6000;
 
         let total = berat.value * hargaPerKg;
-        
-        // Memformat tampilan angka menjadi rupiah dengan format ID (Contoh: Rp 15.000)
-        harga.value = total ? 'Rp ' + total.toLocaleString('id-ID') : '';
+        harga.value = total ? ' ' + total.toLocaleString('id-ID') : '';
     }
 
     jenis.addEventListener('change', hitungHarga);

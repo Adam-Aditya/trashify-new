@@ -31,7 +31,6 @@
 <body class="bg-[#e9f0e4]/50 flex font-jakarta">
 
     <aside class="w-[280px] bg-primary text-white h-screen fixed p-10 flex flex-col justify-between shadow-xl">
-        
         <div>
             <div class="flex items-center gap-3 mb-10">
                 <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center font-bold text-lg text-white border border-white/30">
@@ -47,15 +46,12 @@
                 <a href="{{ route('dashboard') }}" class="px-5 py-3 rounded-xl flex items-center gap-3 text-green-100 hover:bg-white/10 transition">
                     <i class="fas fa-th-large"></i> Dashboard
                 </a>
-
                 <a href="{{ route('history.index') }}" class="bg-white/20 px-5 py-3 rounded-xl flex items-center gap-3 font-semibold transition">
                     <i class="fas fa-history"></i> Riwayat
                 </a>
-
                 <a href="{{ route('poin.tukar') }}" class="px-5 py-3 rounded-xl flex items-center gap-3 text-green-100 hover:bg-white/10 transition">
                     <i class="fas fa-wallet"></i> Wallet
                 </a>
-
                 <a href="{{ route('profil.show') }}" class="px-5 py-3 rounded-xl flex items-center gap-3 text-green-100 hover:bg-white/10 transition">
                     <i class="fas fa-user"></i> Profil
                 </a>
@@ -92,7 +88,8 @@
                             <th scope="col" class="px-6 py-4 font-bold">Nama Sampah</th>
                             <th scope="col" class="px-6 py-4 font-bold">Jenis</th>
                             <th scope="col" class="px-6 py-4 font-bold">Berat</th>
-                            <th scope="col" class="px-6 py-4 font-bold">Harga Estimasi</th>
+                            <th scope="col" class="px-6 py-4 font-bold">Poin Diterima</th>
+                            <th scope="col" class="px-6 py-4 font-bold text-center">Status Konfirmasi</th>
                             <th scope="col" class="px-6 py-4 font-bold text-center">Aksi</th>
                         </tr>
                     </thead>
@@ -101,7 +98,6 @@
                         <tr class="bg-white border-b hover:bg-gray-50 transition">
                             <td class="px-6 py-4 font-semibold text-gray-800">{{ $d->nama }}</td>
                             <td class="px-6 py-4">
-                                {{-- 🛠️ PERBAIKAN: Menggunakan strtolower agar pencocokan warna badge tidak sensitif huruf besar/kecil --}}
                                 @if(strtolower($d->jenis) == 'plastik')
                                     <span class="px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Plastik</span>
                                 @elseif(strtolower($d->jenis) == 'kertas')
@@ -113,12 +109,41 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 font-bold text-gray-700">{{ $d->berat }} Kg</td>
-                            <td class="px-6 py-4 font-bold text-primary">Rp {{ number_format($d->harga, 0, ',', '.') }}</td>
+                            <td class="px-6 py-4 font-bold text-primary">{{ number_format($d->harga, 0, ',', '.') }}</td>
+                            
+                            <!-- 🛠️ UPDATE DI SINI: Mendukung status selesai_transaksi -->
+                            <td class="px-6 py-4 text-center">
+                                @if($d->status == 'pending')
+                                    <span class="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-800">
+                                        <i class="fas fa-clock text-[10px]"></i> Menunggu Persetujuan
+                                    </span>
+                                @elseif($d->status == 'diterima')
+                                    <span class="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-800">
+                                        <i class="fas fa-truck text-[10px]"></i> Dalam Penjemputan
+                                    </span>
+                                @elseif($d->status == 'selesai_transaksi')
+                                    <span class="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold rounded-full bg-green-100 text-green-800">
+                                        <i class="fas fa-check-circle text-[10px]"></i> Selesai Terbayar
+                                    </span>
+                                @elseif($d->status == 'ditolak')
+                                    <span class="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold rounded-full bg-red-100 text-red-800">
+                                        <i class="fas fa-times-circle text-[10px]"></i> Ditolak
+                                    </span>
+                                @endif
+                            </td>
+
                             <td class="px-6 py-4">
                                 <div class="flex justify-center gap-4">
-                                    <a href="{{ route('history.edit', $d->id) }}" class="text-blue-600 hover:text-blue-800 transition transform hover:scale-110 text-base" title="Edit Data">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
+                                    <!-- Aksi Edit dikunci jika status bukan pending -->
+                                    @if($d->status == 'pending')
+                                        <a href="{{ route('history.edit', $d->id) }}" class="text-blue-600 hover:text-blue-800 transition transform hover:scale-110 text-base" title="Edit Data">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    @else
+                                        <span class="text-gray-300 cursor-not-allowed text-base" title="Data sudah diproses, tidak bisa diedit">
+                                            <i class="fas fa-edit"></i>
+                                        </span>
+                                    @endif
 
                                     <form action="{{ route('history.destroy', $d->id) }}" method="POST" class="inline">
                                         @csrf
@@ -132,7 +157,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="text-center py-10 text-gray-400 font-medium">
+                            <td colspan="6" class="text-center py-10 text-gray-400 font-medium">
                                 📦 Belum ada riwayat transaksi sampah.
                             </td>
                         </tr>
