@@ -85,7 +85,6 @@ class AuthPenggunaController extends Controller
     public function updateProfil(Request $request)
     {
         $request->validate([
-            // Sudah aman: parameter 'location' murni huruf kecil sesuai trigger JavaScript
             'field' => 'required|in:username,email,password,phone,location',
             'value' => 'required'
         ]);
